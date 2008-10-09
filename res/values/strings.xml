@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+	Copyright (C) 2008 Jeffrey Sharkey, http://jsharkey.org/
+	
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<resources>
+	<string name="app_name">Tunes Remote</string>
+
+	<string name="search_label">TunesRemote Search</string>
+	<string name="search_hint">Music keywords</string>
+	
+	
+	<string name="albums_empty">No albums found\nfor this artist.</string>
+	<string name="albums_menu_play">Play album</string>
+	<string name="albums_menu_browse">Browse tracks</string>
+	<string name="albums_album_caption">%d tracks</string>
+
+	<string name="artists_empty">No artists found\nin this library.</string>
+	<string name="artists_menu_play">Play artist</string>
+	<string name="artists_menu_browse">Browse albums</string>
+
+	<string name="notif_title">Remote music playing</string>
+	<string name="notif_caption">%s - %s</string>
+
+	<string name="control_menu_search">Search</string>
+	<string name="control_menu_artists">Artists</string>
+	<string name="control_menu_pick">Pick library</string>
+
+	<string name="control_menu_repeat_none">No repeat</string>
+	<string name="control_menu_repeat_one">Repeat single</string>
+	<string name="control_menu_repeat_all">Repeat all</string>
+	<string name="control_menu_shuffle_on">Shuffle on</string>
+	<string name="control_menu_shuffle_off">Shuffle off</string>
+
+	<string name="library_menu_refresh">Refresh</string>
+	<string name="library_menu_manual">Manual add</string>
+	<string name="library_menu_forget">Forget all</string>
+	<string name="library_forget">Are you sure you want to forget all libraries ever paired with?</string>
+	<string name="library_forget_pos">Yes, forget</string>
+	<string name="library_forget_neg">No</string>
+	<string name="library_manual_pos">Connect</string>
+	<string name="library_manual_neg">Cancel</string>
+
+	<string name="tracks_empty">No tracks found\nfor this album.</string>
+
+	<string name="pairing_title">Pairing with Library</string>
+	<string name="pairing_caption1">Your Android device is now in pairing mode, and should appear in your desktop/laptop media player.  You'll need to enter a 4-digit code to finish the pairing process:</string>
+	<string name="pairing_caption2">After entering the code on your desktop/laptop, this window should disappear.  If you get stuck, just tap the back button to cancel.</string>
+
+
+
+	<string name="wizard_title1">TunesRemote helps you remote control your DACP-compatible desktop or laptop media player, such as Apple iTunes(tm).</string>
+	<string name="wizard_title2">It lets you easily browse your albums, including full-text search from a distance.</string>
+	<string name="wizard_eula">Before we get started, we need to get some legal information out of the way:\n\nTunesRemote provides its service to you subject to the following conditions.  You accept these conditions by using TunesRemote.\n\nThis program and all information, content, materials, products and services included are provided by TunesRemote on an 'as is' basis without warranties or conditions of any kind.\n\nNeither TunesRemote nor its author will not be liable for any damages of any kind arising from the use of this program or from any information, content, materials, products or services made available through this program.\n\niTunes is a registered trademark of Apple, Inc., registered in the U.S. and other countries.  This program makes no claim to be either authorized or approved by Apple, Inc.</string>
+
+	<string name="wizard_pos">Agree</string>
+	<string name="wizard_neg">Cancel</string>
+
+	<string name="dia_ipaddress">IP address</string>
+	<string name="dia_code">Pairing code</string>
+
+	<string name="item_fetch">Fetching more search results...</string>
+
+	<string name="item_network_title">Searching network for libraries...</string>
+	<string name="item_network_caption">If nothing found, try reconnecting to your WiFi network, or tap Menu to enter IP address</string>
+
+
+	<string name="toast_volume_title">Remote volume</string>
+
+
+	
+</resources>

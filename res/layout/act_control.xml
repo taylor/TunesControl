@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+	Copyright (C) 2008 Jeffrey Sharkey, http://jsharkey.org/
+	
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	>
+    
+	<ImageSwitcher
+		android:id="@+id/cover"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		/>
+	
+
+	<org.tunescontrol.FadeView
+		android:id="@+id/fadeview"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		>
+		
+
+	<LinearLayout
+		android:id="@+id/info_box"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		android:padding="10dip"
+		android:background="#a000"
+		>
+
+		<TextView  
+			android:id="@+id/info_title"
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content" 
+			android:textStyle="bold"
+			android:textAppearance="?android:attr/textAppearanceLarge"
+			/>
+		
+		<TextView  
+			android:id="@+id/info_artist"
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content" 
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			/>
+
+		<TextView  
+			android:id="@+id/info_album"
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content" 
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			/>
+
+	</LinearLayout>
+	
+	
+	<RelativeLayout
+		android:id="@+id/seek_box"
+		android:layout_alignParentBottom="true"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" 
+		android:orientation="vertical"
+		android:paddingLeft="10dip"
+		android:paddingRight="10dip"
+		android:paddingBottom="10dip"
+		android:background="#a000"
+		>
+
+		<SeekBar
+			android:id="@+id/seek"
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"
+			android:padding="5dip"
+			/>
+			
+		<TextView
+			android:id="@+id/seek_position"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content" 
+			android:layout_below="@id/seek"
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			/>
+	
+		<TextView
+			android:id="@+id/seek_remain"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content" 
+			android:layout_below="@id/seek"
+			android:layout_alignParentRight="true"
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			/>
+	
+	</RelativeLayout>
+	
+	
+	<RelativeLayout
+		android:id="@+id/control_box"
+		android:layout_above="@id/seek_box"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" 
+		android:orientation="vertical"
+		android:background="#a000"
+		>
+
+		<LinearLayout
+			android:id="@+id/control_buttons"
+			android:layout_centerHorizontal="true"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
+			
+			<ImageButton
+				android:id="@+id/control_prev"
+				android:src="@android:drawable/ic_media_previous"
+				android:paddingLeft="30dip" android:paddingRight="30dip"
+				android:paddingTop="20dip" android:paddingBottom="20dip"
+				android:background="#00000000"
+				android:layout_width="wrap_content" 
+				android:layout_height="wrap_content"
+				/>
+		
+			<ImageButton
+				android:id="@+id/control_pause"
+				android:src="@android:drawable/ic_media_pause"
+				android:paddingLeft="30dip" android:paddingRight="30dip"
+				android:paddingTop="20dip" android:paddingBottom="20dip"
+				android:background="#00000000"
+				android:layout_width="wrap_content" 
+				android:layout_height="wrap_content"
+				/>
+	
+			<ImageButton
+				android:id="@+id/control_next"
+				android:src="@android:drawable/ic_media_next"
+				android:paddingLeft="30dip" android:paddingRight="30dip"
+				android:paddingTop="20dip" android:paddingBottom="20dip"
+				android:background="#00000000"
+				android:layout_width="wrap_content" 
+				android:layout_height="wrap_content"
+				/>
+	
+		</LinearLayout>
+	
+	</RelativeLayout>
+		
+
+	
+	
+	</org.tunescontrol.FadeView>
+
+    
+</RelativeLayout>
