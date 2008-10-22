@@ -18,10 +18,10 @@
 
 <resources>
 	<string name="app_name">Tunes Remote</string>
+	<string name="app_desc">Remote control for DACP-compatible desktop music players, like iTunes</string>
 
 	<string name="search_label">TunesRemote Search</string>
 	<string name="search_hint">Music keywords</string>
-	
 	
 	<string name="albums_empty">No albums found\nfor this artist.</string>
 	<string name="albums_menu_play">Play album</string>

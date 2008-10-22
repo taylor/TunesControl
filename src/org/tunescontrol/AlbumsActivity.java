@@ -138,13 +138,17 @@ public class AlbumsActivity extends ListActivity {
 		
 		this.getListView().setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				// launch activity to browse track details for this albums
-				Response resp = (Response)adapter.getItem(position);
-				final String albumid = resp.getNumberString("mper");
-				
-				Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
-				intent.putExtra(Intent.EXTRA_TITLE, albumid);
-				AlbumsActivity.this.startActivity(intent);
+				try {
+					// launch activity to browse track details for this albums
+					Response resp = (Response)adapter.getItem(position);
+					final String albumid = resp.getNumberString("mper");
+					
+					Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
+					intent.putExtra(Intent.EXTRA_TITLE, albumid);
+					AlbumsActivity.this.startActivity(intent);
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 				
 			}
 		});
@@ -156,29 +160,33 @@ public class AlbumsActivity extends ListActivity {
 		
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
 		
-		// create context menu to play entire artist
-		Response resp = (Response)adapter.getItem(info.position);
-		menu.setHeaderTitle(resp.getString("minm"));
-		final String albumid = resp.getNumberString("mper");
-		
-		MenuItem play = menu.add(R.string.albums_menu_play);
-		play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			public boolean onMenuItemClick(MenuItem item) {
-				session.controlPlayAlbum(albumid, 0);
-				return true;
-			}
-		});
-
-		MenuItem browse = menu.add(R.string.albums_menu_browse);
-		browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			public boolean onMenuItemClick(MenuItem item) {
-				Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
-				intent.putExtra(Intent.EXTRA_TITLE, albumid);
-				AlbumsActivity.this.startActivity(intent);
-
-				return true;
-			}
-		});
+		try {
+			// create context menu to play entire artist
+			Response resp = (Response)adapter.getItem(info.position);
+			menu.setHeaderTitle(resp.getString("minm"));
+			final String albumid = resp.getNumberString("mper");
+			
+			MenuItem play = menu.add(R.string.albums_menu_play);
+			play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					session.controlPlayAlbum(albumid, 0);
+					return true;
+				}
+			});
+	
+			MenuItem browse = menu.add(R.string.albums_menu_browse);
+			browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
+					intent.putExtra(Intent.EXTRA_TITLE, albumid);
+					AlbumsActivity.this.startActivity(intent);
+	
+					return true;
+				}
+			});
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -228,16 +236,20 @@ public class AlbumsActivity extends ListActivity {
 			if(convertView == null)
 				convertView = this.inflater.inflate(R.layout.item_album, parent, false);
 			
-			Response child = (Response)this.getItem(position);
-			String title = child.getString("minm");
-			String caption = AlbumsActivity.this.getResources().getString(R.string.albums_album_caption, child.getNumberLong("mimc"));
-
-			((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
-			((TextView)convertView.findViewById(android.R.id.text2)).setText(caption);
-
-			// go load image art
-			((ImageView)convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
-			new LoadPhotoTask().execute(new Integer(position), new Integer((int)child.getNumberLong("miid")));
+			try {
+				Response child = (Response)this.getItem(position);
+				String title = child.getString("minm");
+				String caption = AlbumsActivity.this.getResources().getString(R.string.albums_album_caption, child.getNumberLong("mimc"));
+	
+				((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
+				((TextView)convertView.findViewById(android.R.id.text2)).setText(caption);
+	
+				// go load image art
+				((ImageView)convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
+				new LoadPhotoTask().execute(new Integer(position), new Integer((int)child.getNumberLong("miid")));
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 			
 			return convertView;
 			

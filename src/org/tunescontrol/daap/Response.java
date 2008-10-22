@@ -41,30 +41,32 @@ public class Response extends HashMap<String,Object> {
 
 	
 	
-
-	
-	public Response getNested(String key) {
+	public Response getNested(String key) throws Exception {
 		return (Response)this.get(key);
 	}
 	
-	public String getString(String key) {
-		return (String)this.get(key);
+	public String getString(String key) throws Exception {
+		Object obj = this.get(key);
+		if(obj instanceof String) return (String)obj;
+		else return "";
 	}
 	
-	public BigInteger getNumber(String key) {
-		return (BigInteger)this.get(key);
+	public BigInteger getNumber(String key) throws Exception {
+		Object obj = this.get(key);
+		if(obj instanceof BigInteger) return (BigInteger)obj;
+		else return new BigInteger("-1");
 	}
 
-	public long getNumberLong(String key) {
+	public long getNumberLong(String key) throws Exception {
 		return getNumber(key).longValue();
 	}
 	
-	public String getNumberString(String key) {
+	public String getNumberString(String key) throws Exception {
 		return getNumber(key).toString();
 	}
 	
 	
-	public List<Response> findArray(String prefix) {
+	public List<Response> findArray(String prefix) throws Exception {
 		List<Response> found = new LinkedList<Response>();
 		
 		// find all values with same key prefix

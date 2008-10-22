@@ -65,7 +65,7 @@ public class Status {
 			while(true) {
 				// when in playing state, keep moving progress forward
 				while(playStatus == STATE_PLAYING) {
-					//Log.d(TAG, "thread entering playing loop");
+					Log.d(TAG, "thread entering playing loop");
 					long anchor = System.currentTimeMillis();
 					try {
 						Thread.sleep(1000);
@@ -82,23 +82,34 @@ public class Status {
 					update.sendEmptyMessage(UPDATE_PROGRESS);
 					
 					// trigger a forced update if we seem to gone past end of song
-					if(progressRemain < 0) {
+					if(progressRemain <= 0) {
+						Log.d(TAG, "suggesting that we fetch new song");
 						fetchUpdate();
 					}
 				}
 				
 				// keep sleeping while in paused state
 				while(playStatus == STATE_PAUSED) {
-					//Log.d(TAG, "thread entering paused loop");
+					Log.d(TAG, "thread entering paused loop");
 					try {
 						Thread.sleep(10000);
 					} catch (InterruptedException e) {
-						Log.d(TAG, "someone jolted us during STATE_PAUSED loop");
 						// someone probably jolted us awake with a status update
+						Log.d(TAG, "someone jolted us during STATE_PAUSED loop");
 					}
 
 					if(destroyThread) return;
 				}
+
+				// one final sleep to make sure we behave nicely in case of unknown status
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					Log.d(TAG, "someone jolted us during OVERALL loop");
+				}
+				
+				if(destroyThread) return;
+
 			}
 			
 		}
@@ -171,7 +182,7 @@ public class Status {
 							session.getRequestBase(), 1, session.sessionId), false));
 				} catch (Exception e) {
 					e.printStackTrace();
-					destroy();
+					//destroy();
 				}
 			}
 		}).start();
@@ -180,7 +191,7 @@ public class Status {
 	
 	
 	
-	protected void parseUpdate(Response resp) {
+	protected void parseUpdate(Response resp) throws Exception {
 		/*
 		 *  cmst  --+
 			mstt   4      000000c8 == 200
@@ -202,6 +213,7 @@ public class Status {
 			cast   4      0002eb58 == 191320
 		 */
 		
+	
 		// keep track of the worst update that could happen
 		int updateType = UPDATE_PROGRESS;
 		
@@ -221,6 +233,7 @@ public class Status {
 			this.shuffleStatus = shuffleStatus;
 			this.repeatStatus = repeatStatus;
 
+			Log.d(TAG, "about to interrupt #1");
 			this.progress.interrupt();
 		}
 
@@ -245,6 +258,7 @@ public class Status {
 			
 			// tell our progress updating thread about a new track
 			// this makes sure he doesnt count progress from last song against this new one
+			Log.d(TAG, "about to interrupt #2");
 			this.progress.interrupt();
 		}
 		

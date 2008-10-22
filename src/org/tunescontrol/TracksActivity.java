@@ -184,16 +184,22 @@ public class TracksActivity extends ListActivity {
 			
 			if(convertView == null)
 				convertView = inflater.inflate(R.layout.item_track, parent, false);
+			
+			try {
 
-			// otherwise show normal search result
-			Response resp = (Response)this.getItem(position);
-			
-			String title = resp.getString("minm");
-			date.setTime(resp.getNumberLong("astm"));
-			String length = format.format(date);
-			
-			((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
-			((TextView)convertView.findViewById(android.R.id.text2)).setText(length);
+				// otherwise show normal search result
+				Response resp = (Response)this.getItem(position);
+				
+				String title = resp.getString("minm");
+				date.setTime(resp.getNumberLong("astm"));
+				String length = format.format(date);
+				
+				((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
+				((TextView)convertView.findViewById(android.R.id.text2)).setText(length);
+				
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 			
 			
 			/*

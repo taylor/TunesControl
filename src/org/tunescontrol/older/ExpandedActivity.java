@@ -172,11 +172,15 @@ public class ExpandedActivity extends Activity implements OnScrollListener {
 
 		this.list.setOnChildClickListener(new OnChildClickListener() {
 			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-				// launch activity to browse track details for this albums
-				// TODO: expand this out to show individual tracks
-				Response resp = (Response)adapter.getChild(groupPosition, childPosition);
-				String albumid = resp.getNumberString("mper");
-				session.controlPlayAlbum(albumid, 0);
+				try {
+					// launch activity to browse track details for this albums
+					// TODO: expand this out to show individual tracks
+					Response resp = (Response)adapter.getChild(groupPosition, childPosition);
+					String albumid = resp.getNumberString("mper");
+					session.controlPlayAlbum(albumid, 0);
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 				return false;
 			}
 		});
@@ -251,24 +255,29 @@ public class ExpandedActivity extends Activity implements OnScrollListener {
 		case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
 			// for a given album we could browse tracks or play
 			
-			Response resp = (Response)adapter.getChild(group, child);
-			menu.setHeaderTitle(resp.getString("minm"));
-			final String albumid = resp.getNumberString("mper");
-			
-			MenuItem play2 = menu.add("Play album");
-			play2.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-				public boolean onMenuItemClick(MenuItem item) {
-					session.controlPlayAlbum(albumid, 0);
-					return true;
-				}
-			});
+			try {
+				Response resp = (Response)adapter.getChild(group, child);
+				menu.setHeaderTitle(resp.getString("minm"));
+				final String albumid = resp.getNumberString("mper");
+				
+				MenuItem play2 = menu.add("Play album");
+				play2.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlPlayAlbum(albumid, 0);
+						return true;
+					}
+				});
+	
+				MenuItem browse = menu.add("Browse tracks");
+				browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						return true;
+					}
+				});
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 
-			MenuItem browse = menu.add("Browse tracks");
-			browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-				public boolean onMenuItemClick(MenuItem item) {
-					return true;
-				}
-			});
 
 			break;
 			
@@ -391,28 +400,33 @@ public class ExpandedActivity extends Activity implements OnScrollListener {
 
 		public void foundTag(String tag, Response resp) {
 			
-			String artist = resp.getString("asaa");
-			if(artist == null) return;
-			
-			// create artist subtree if doesnt exist
-			if(!tree.containsKey(artist))
-				tree.put(artist, new LinkedList<Response>());
-			
-			tree.get(artist).add(resp);
-			
-			// notify changed when dirty enough, or when forced
-			if(dirtyCount++ > UPDATE_EVERY) {
-				this.buildArtists();
-				this.updateHandler.sendEmptyMessage(-1);
-
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+			try {
+				String artist = resp.getString("asaa");
+				if(artist == null) return;
 				
-				dirtyCount = 0;
+				// create artist subtree if doesnt exist
+				if(!tree.containsKey(artist))
+					tree.put(artist, new LinkedList<Response>());
+				
+				tree.get(artist).add(resp);
+				
+				// notify changed when dirty enough, or when forced
+				if(dirtyCount++ > UPDATE_EVERY) {
+					this.buildArtists();
+					this.updateHandler.sendEmptyMessage(-1);
+	
+					try {
+						Thread.sleep(1);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+					dirtyCount = 0;
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
+
 		
 		}
 		
@@ -444,16 +458,21 @@ public class ExpandedActivity extends Activity implements OnScrollListener {
 			if(convertView == null)
 				convertView = this.inflater.inflate(R.layout.item_album, parent, false);
 			
-			Response child = (Response)this.getChild(groupPosition, childPosition);
-			String title = child.getString("minm");
-			String caption = String.format("%d tracks", child.getNumberLong("mimc"));
+			try {
+				Response child = (Response)this.getChild(groupPosition, childPosition);
+				String title = child.getString("minm");
+				String caption = String.format("%d tracks", child.getNumberLong("mimc"));
+	
+				((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
+				((TextView)convertView.findViewById(android.R.id.text2)).setText(caption);
+	
+				// go load image art
+				((ImageView)convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
+				new LoadPhotoTask().execute(new Integer(groupPosition), new Integer(childPosition), new Integer((int)child.getNumberLong("miid")));
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 
-			((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
-			((TextView)convertView.findViewById(android.R.id.text2)).setText(caption);
-
-			// go load image art
-			((ImageView)convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
-			new LoadPhotoTask().execute(new Integer(groupPosition), new Integer(childPosition), new Integer((int)child.getNumberLong("miid")));
 			
 			return convertView;
 		}

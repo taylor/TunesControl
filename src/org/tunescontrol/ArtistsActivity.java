@@ -160,12 +160,16 @@ public class ArtistsActivity extends ListActivity implements AlphaScrollable {
 		this.getListView().setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				// launch activity to browse track details for this albums
-				Response resp = (Response)adapter.getItem(position);
-				final String artist = resp.getString("mlit");
-				
-				Intent intent = new Intent(ArtistsActivity.this, AlbumsActivity.class);
-				intent.putExtra(Intent.EXTRA_TITLE, artist);
+				try {
+					Response resp = (Response)adapter.getItem(position);
+					final String artist = resp.getString("mlit");
+					
+					Intent intent = new Intent(ArtistsActivity.this, AlbumsActivity.class);
+					intent.putExtra(Intent.EXTRA_TITLE, artist);
 				ArtistsActivity.this.startActivity(intent);
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 				
 			}
 		});
@@ -178,31 +182,37 @@ public class ArtistsActivity extends ListActivity implements AlphaScrollable {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
 		
 		// create context menu to play entire artist
-		Response resp = (Response)adapter.getItem(info.position);
-		final String artist = resp.getString("mlit");
-		menu.setHeaderTitle(artist);
+		try {
+			Response resp = (Response)adapter.getItem(info.position);
+			final String artist = resp.getString("mlit");
+			menu.setHeaderTitle(artist);
+			
+			MenuItem play = menu.add(R.string.artists_menu_play);
+			play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					session.controlPlayArtist(artist);
+					return true;
+				}
+			});
+	
+			MenuItem browse = menu.add(R.string.artists_menu_browse);
+			browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					Intent intent = new Intent(ArtistsActivity.this, AlbumsActivity.class);
+					intent.putExtra(Intent.EXTRA_TITLE, artist);
+					ArtistsActivity.this.startActivity(intent);
+					return true;
+				}
+			});
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		
-		MenuItem play = menu.add(R.string.artists_menu_play);
-		play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			public boolean onMenuItemClick(MenuItem item) {
-				session.controlPlayArtist(artist);
-				return true;
-			}
-		});
-
-		MenuItem browse = menu.add(R.string.artists_menu_browse);
-		browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			public boolean onMenuItemClick(MenuItem item) {
-				Intent intent = new Intent(ArtistsActivity.this, AlbumsActivity.class);
-				intent.putExtra(Intent.EXTRA_TITLE, artist);
-				ArtistsActivity.this.startActivity(intent);
-				return true;
-			}
-		});
 
 	}
 	
 	protected char startsWith(int index) {
+		if(index < 0 || index >= adapter.nice.size()) return ' ';
 		return adapter.nice.get(index).charAt(0);
 	}
 
@@ -267,13 +277,17 @@ public class ArtistsActivity extends ListActivity implements AlphaScrollable {
 		}
 		
 		public void foundTag(String tag, Response resp) {
-			// add a found search result to our list
-			if(resp.containsKey("mlit")) {
-				String mlit = resp.getString("mlit");
-				if(mlit.length() > 0 && !mlit.startsWith("mshc")) {
-					results.add(resp);
-					nice.add(mlit.replaceAll("The ", "").toUpperCase());
-				}
+			try {
+				// add a found search result to our list
+				if(resp.containsKey("mlit")) {
+					String mlit = resp.getString("mlit");
+					if(mlit.length() > 0 && !mlit.startsWith("mshc")) {
+						results.add(resp);
+						nice.add(mlit.replaceAll("The ", "").toUpperCase());
+					}
+			}
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
 		}
 		
@@ -303,11 +317,15 @@ public class ArtistsActivity extends ListActivity implements AlphaScrollable {
 			if(convertView == null)
 				convertView = inflater.inflate(R.layout.item_artist, parent, false);
 
-			// otherwise show normal search result
-			Response resp = (Response)this.getItem(position);
-			
-			String title = resp.getString("mlit");
+			try {
+				// otherwise show normal search result
+				Response resp = (Response)this.getItem(position);
+				
+				String title = resp.getString("mlit");
 			((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 			
 			
 			/*

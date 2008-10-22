@@ -39,19 +39,23 @@ import javax.jmdns.impl.DNSEntry;
 import javax.jmdns.impl.DNSRecord;
 import javax.jmdns.impl.JmDNSImpl;
 
+import org.json.JSONObject;
 import org.tunescontrol.daap.PairingServer;
 import org.tunescontrol.daap.Session;
 import org.tunescontrol.daap.Status;
+import org.tunescontrol.daap.UpdateHelper;
 import org.tunescontrol.older.ExpandedActivity.AlbumAdapter;
 
 
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -70,6 +74,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -320,6 +325,10 @@ public class ControlActivity extends Activity implements ViewFactory {
 			this.startActivityForResult(new Intent(this, WizardActivity.class), 1);
 			
 		}
+		
+		// check for updates
+		new UpdateHelper(this);
+		
 		
 		this.shouldPause = PAUSE.equals(this.getIntent().getStringExtra(Intent.EXTRA_KEY_EVENT));
 		

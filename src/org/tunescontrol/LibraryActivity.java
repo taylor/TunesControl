@@ -389,6 +389,10 @@ public class LibraryActivity extends Activity {
 				return true;
 			}
 		});
+		
+		MenuItem about = menu.add("About");
+		about.setIcon(android.R.drawable.ic_menu_help);
+		about.setIntent(new Intent(LibraryActivity.this, WizardActivity.class));
 
 		return true;
     }

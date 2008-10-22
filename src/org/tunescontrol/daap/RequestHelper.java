@@ -88,6 +88,8 @@ public class RequestHelper {
 	
 	public static byte[] request(String remote, boolean keepalive) throws Exception {
 		
+		Log.d("RequestHelper", String.format("started request(remote=%s)", remote));
+
 		byte[] buffer = new byte[1024];
 		
 		URL url = new URL(remote);

@@ -51,15 +51,42 @@
 			android:text="@string/wizard_title2"
 			android:textAppearance="?android:attr/textAppearanceMedium"
 			/>
+			
 
 		<TextView
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:paddingTop="10dip"
-			android:text="@string/wizard_eula"
+			android:text="Before we get started, we need to get some legal information out of the way.  TunesRemote is provided under an open-source GPLv3 license.  Here are a few key points:\n\nThere is no warranty for the program, to the extent permitted by applicable law.  Except when otherwise stated in writing the copyright holders and/or other parties provide the program 'as is' without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose.  The entire risk as to the quality and performance of the program is with you.  Should the program prove defective, you assume the cost of all necessary servicing, repair or correction.\n\nIn no event unless required by applicable law or agreed to in writing will any copyright holder, or any other party who modifies and/or conveys the program as permitted above, be liable to you for damages, including any general, special, incidental or consequential damages arising out of the use or inability to use the program (including but not limited to loss of data or data being rendered inaccurate or losses sustained by you or third parties or a failure of the program to operate with any other programs), even if such holder or other party has been advised of the possibility of such damages."
 			android:textAppearance="?android:attr/textAppearanceSmall"
 			/>
-			
+	
+		<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:autoLink="web"
+			android:text="You can view the full text at http://www.gnu.org/licenses/gpl-3.0.txt"
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			/>
+		
+	 	<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:text="About and Credits"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			/>
+	 
+		<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:autoLink="web"
+			android:text="Copyright (c) 2008 Jeffrey Sharkey http://jsharkey.org, DACP protocol details can be found at http://dacp.jsharkey.org\n\nBased in part on the JmDNS Bonjour library, provided under a LGPL license, http://jmdns.sourceforge.net\n\niTunes is a registered trademark of Apple, Inc., registered in the U.S. and other countries.  This program makes no claim to be either authorized or approved by Apple, Inc."
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			/>
+		
 	</LinearLayout>
 
 </ScrollView>

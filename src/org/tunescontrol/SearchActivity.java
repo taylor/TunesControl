@@ -33,6 +33,7 @@ import org.tunescontrol.daap.Response;
 import org.tunescontrol.daap.Session;
 import org.tunescontrol.daap.Status;
 import org.tunescontrol.daap.ResponseParser.TagListener;
+import org.tunescontrol.util.RecentProvider;
 import org.tunescontrol.util.UserTask;
 
 import android.app.Activity;
@@ -47,6 +48,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.provider.SearchRecentSuggestions;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -143,6 +145,11 @@ public class SearchActivity extends Activity {
 		this.list = (ListView)this.findViewById(android.R.id.list);
 		this.query = this.getIntent().getStringExtra(SearchManager.QUERY);
 		//this.query = "jes";
+		
+		// store search in recent history
+		SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this, RecentProvider.AUTHORITY, RecentProvider.MODE);
+		suggestions.saveRecentQuery(query, null);
+
 		
 		this.blank = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
 		
@@ -253,21 +260,26 @@ public class SearchActivity extends Activity {
 			if(convertView == null)
 				convertView = inflater.inflate(R.layout.item_album, parent, false);
 
-			// otherwise show normal search result
-			Response resp = (Response)this.getItem(position);
-			
-			String title = resp.getString("minm");
-			String caption = String.format("%s - %s", resp.getString("asar"), resp.getString("asal"));
-			
-			((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
-			((TextView)convertView.findViewById(android.R.id.text2)).setText(caption);
-			
-			// TODO: fetch artwork from local cache
-			
-			// start a usertask to fetch the album art
-			// blank out any current art first
-			((ImageView)convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
-			new LoadPhotoTask().execute(new Integer(position), new Integer((int)resp.getNumberLong("miid")));
+			try {
+				// otherwise show normal search result
+				Response resp = (Response)this.getItem(position);
+				
+				String title = resp.getString("minm");
+				String caption = String.format("%s - %s", resp.getString("asar"), resp.getString("asal"));
+				
+				((TextView)convertView.findViewById(android.R.id.text1)).setText(title);
+				((TextView)convertView.findViewById(android.R.id.text2)).setText(caption);
+				
+				// TODO: fetch artwork from local cache
+				
+				// start a usertask to fetch the album art
+				// blank out any current art first
+				((ImageView)convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
+				new LoadPhotoTask().execute(new Integer(position), new Integer((int)resp.getNumberLong("miid")));
+				
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 			
 			
 			/*
