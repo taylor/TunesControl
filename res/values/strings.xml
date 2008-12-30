@@ -62,7 +62,7 @@
 
 
 
-	<string name="wizard_title1">TunesRemote helps you remote control your DACP-compatible desktop or laptop media player, such as Apple iTunes(tm).</string>
+	<string name="wizard_title1">TunesRemote helps you remote control your DACP-compatible desktop or laptop media player, such as Apple iTunes\u2122.</string>
 	<string name="wizard_title2">It lets you easily browse your albums, including full-text search from a distance.</string>
 	<string name="wizard_eula">Before we get started, we need to get some legal information out of the way:\n\nTunesRemote provides its service to you subject to the following conditions.  You accept these conditions by using TunesRemote.\n\nThis program and all information, content, materials, products and services included are provided by TunesRemote on an 'as is' basis without warranties or conditions of any kind.\n\nNeither TunesRemote nor its author will not be liable for any damages of any kind arising from the use of this program or from any information, content, materials, products or services made available through this program.\n\niTunes is a registered trademark of Apple, Inc., registered in the U.S. and other countries.  This program makes no claim to be either authorized or approved by Apple, Inc.</string>
 
@@ -75,11 +75,14 @@
 	<string name="item_fetch">Fetching more search results...</string>
 
 	<string name="item_network_title">Searching network for libraries...</string>
-	<string name="item_network_caption">If nothing found, try reconnecting to your WiFi network, or tap Menu to enter IP address</string>
+	<string name="item_network_caption">Open iTunes and make sure you're on the same Wifi network.  If having trouble, try cycling your Wifi, opening port 3689 in your firewall, or tapping Menu and Refresh.</string>
 
 
 	<string name="toast_volume_title">Remote volume</string>
 
+	<string name="pref_background">background</string>
+	<string name="pref_fade">fade</string>
+	<string name="pref_fadeupnew">fadeupnew</string>
+	<string name="pref_vibrate">vibrate</string>
 
-	
 </resources>

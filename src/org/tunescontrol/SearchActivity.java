@@ -48,6 +48,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.Process;
 import android.provider.SearchRecentSuggestions;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -112,8 +113,10 @@ public class SearchActivity extends Activity {
 		public void handleMessage(Message msg) {
 			if(msg.what == FORCE_TOP)
 				list.setSelection(0);
-			if(msg.what == REMOVE_FOOTER)
+			if(msg.what == REMOVE_FOOTER) {
 				list.removeFooterView(adapter.footerView);
+				list.requestLayout();
+			}
 			adapter.notifyDataSetChanged();
 		}
 	};
@@ -132,6 +135,14 @@ public class SearchActivity extends Activity {
 	public void onStop() {
 		super.onStop();
 		this.unbindService(connection);
+		
+		// make sure that we release usertask
+		//UserTask.resume();
+		synchronized(adapter.scrollWait) {
+			adapter.scrolling = false;
+			adapter.scrollWait.notifyAll();
+		}
+
 	
 	}
 	
@@ -275,6 +286,7 @@ public class SearchActivity extends Activity {
 				// start a usertask to fetch the album art
 				// blank out any current art first
 				((ImageView)convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
+				
 				new LoadPhotoTask().execute(new Integer(position), new Integer((int)resp.getNumberLong("miid")));
 				
 			} catch(Exception e) {
@@ -300,7 +312,7 @@ public class SearchActivity extends Activity {
 			
 			
 		}
-
+		
 		public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
 			// trigger more search results when hitting the last item
 			if(this.fetchRequested) return;
@@ -308,8 +320,34 @@ public class SearchActivity extends Activity {
 				this.triggerPage();
 
 		}
-
+		
+		public boolean scrolling = false;
+		public Object scrollWait = new Object();
+		
 		public void onScrollStateChanged(AbsListView view, int scrollState) {
+			if(scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
+				//UserTask.resume();
+				synchronized(scrollWait) {
+					scrolling = false;
+					scrollWait.notifyAll();
+				}
+				
+				// create thumbnail jobs for all visible items
+//				for(int position = list.getFirstVisiblePosition(); position < list.getLastVisiblePosition(); position++) {
+//					try {
+//						Response resp = (Response)this.getItem(position);
+//						int miid = (int)resp.getNumberLong("miid");
+//						new LoadPhotoTask().execute(new Integer(position), new Integer(miid));
+//					} catch (Exception e) {
+//					}
+//				}
+				
+			} else {
+				//UserTask.pause();
+				synchronized(scrollWait) {
+					scrolling = true;
+				}
+			}
 		}
 
 	}
@@ -331,34 +369,30 @@ public class SearchActivity extends Activity {
 					bitmap = memcache.get(itemid).get();
 				}
 				
-				if(bitmap != null) {
-					//Log.d(TAG, String.format("MEMORY cache hit for %s", itemid.toString()));
-				} else {
+				if(bitmap == null) {
 					
-					File cache = new File(SearchActivity.this.getCacheDir(), itemid.toString());
-					if(cache.exists()) {
+					// if scrolling, wait until weve finished
+					if(adapter.scrolling) {
+						//Log.w(TAG, "waiting because someone says were scrolling");
+						synchronized(adapter.scrollWait) {
+							adapter.scrollWait.wait();
+						}
 						
-						// first check if we have a local cache
-						//Log.d(TAG, String.format("disk cache hit for %s", itemid.toString()));
-						bitmap = BitmapFactory.decodeFile(cache.toString());
+						// dont bother fetching if weve left screen
+						if(position < list.getFirstVisiblePosition() || position > list.getLastVisiblePosition()) {
+							//Log.w(TAG, "requested isnt on screen anymore");
+							return new Object[] {};
+						}
 
-					} else {
-					
-						// fetch the album cover from itunes
-						byte[] raw = RequestHelper.request(String.format("%s/databases/%d/items/%d/extra_data/artwork?session-id=%s&mw=55&mh=55",
-								session.getRequestBase(), session.databaseId, itemid, session.sessionId), false);
-						bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-		
-						// cache the image locally so we can find it faster in future
-						OutputStream out = new FileOutputStream(cache);
-						out.write(raw);
-						out.close();
-						
 					}
 					
+					// fetch the album cover from itunes
+					byte[] raw = RequestHelper.request(String.format("%s/databases/%d/items/%d/extra_data/artwork?session-id=%s&mw=55&mh=55",
+							session.getRequestBase(), session.databaseId, itemid, session.sessionId), false);
+					bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+	
 					// if SOMEHOW (404, etc) this image was still null, then save as blank
-					if(bitmap == null)
-						bitmap = blank;
+					if(bitmap == null) bitmap = blank;
 
 					// try removing any stale references
 					memcache.remove(itemid);
@@ -377,6 +411,8 @@ public class SearchActivity extends Activity {
 
 		@Override
 		public void end(Object[] result) {
+			
+			if(result.length == 0) return;
 			
 			// update gui to show the newly-fetched albumart
 			int position = ((Integer)result[0]).intValue();

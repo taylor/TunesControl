@@ -138,6 +138,8 @@ public class BackendService extends Service {
 		// close any dns services and current status threads
 		// store information about last-connected library
 		
+		Log.d(TAG, "stopping backend service");
+
 		this.pairdb.close();
 
 		

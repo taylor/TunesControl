@@ -18,20 +18,21 @@
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
+	android:layout_height="wrap_content"
 	android:gravity="center_vertical|left"
 	android:paddingTop="10dip"
-	android:paddingLeft="20dip"
-	android:paddingRight="40dip"
+	android:paddingLeft="15dip"
+	android:paddingRight="15dip"
 	android:paddingBottom="10dip"
 	>
 
 <!-- 
 	android:paddingLeft="40dip"
+	android:paddingRight="40dip"
 	 -->
 	<TextView
 		android:id="@android:id/text1"
-		android:layout_width="wrap_content"
+		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceLarge"
 		android:textStyle="bold"

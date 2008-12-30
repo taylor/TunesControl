@@ -113,7 +113,7 @@ public class TracksActivity extends ListActivity {
 		setContentView(R.layout.gen_list);
 		
 		((TextView)this.findViewById(android.R.id.empty)).setText(R.string.tracks_empty);
-		
+
 		// show tracklist for specified album
 		// set out list adapter to albums found
 		

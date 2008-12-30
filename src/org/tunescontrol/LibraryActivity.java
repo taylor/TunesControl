@@ -79,8 +79,8 @@ public class LibraryActivity extends Activity {
 	
 	// show a list of all libraries found on local wifi network
 	// should have refresh button easly accessibly, and also detect wifi issues
-	
 
+	
 	public final static String TAG = LibraryActivity.class.toString();
 	
 	public static JmDNS jmdns;
@@ -390,10 +390,6 @@ public class LibraryActivity extends Activity {
 			}
 		});
 		
-		MenuItem about = menu.add("About");
-		about.setIcon(android.R.drawable.ic_menu_help);
-		about.setIntent(new Intent(LibraryActivity.this, WizardActivity.class));
-
 		return true;
     }
     

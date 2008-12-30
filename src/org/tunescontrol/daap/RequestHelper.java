@@ -29,6 +29,7 @@ import java.net.URLEncoder;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Process;
 import android.util.Log;
 
 public class RequestHelper {
@@ -88,7 +89,9 @@ public class RequestHelper {
 	
 	public static byte[] request(String remote, boolean keepalive) throws Exception {
 		
-		Log.d("RequestHelper", String.format("started request(remote=%s)", remote));
+        Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
+		
+		//Log.d("RequestHelper", String.format("started request(remote=%s)", remote));
 
 		byte[] buffer = new byte[1024];
 		
@@ -112,7 +115,7 @@ public class RequestHelper {
 		os.close();
 		is.close();
 		
-		Log.d("RequestHelper", String.format("finished request(remote=%s, size=%d)", remote, os.size()));
+		//Log.d("RequestHelper", String.format("finished request(remote=%s, size=%d)", remote, os.size()));
 		
 		return os.toByteArray();
 		

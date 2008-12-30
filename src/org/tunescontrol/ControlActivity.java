@@ -81,6 +81,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -118,6 +120,8 @@ public class ControlActivity extends Activity implements ViewFactory {
 			
 			if(!agreed) return;
 			
+			Log.w(TAG, "onServiceConnected");
+
 			session = backend.getSession();
 			if(session == null) {
 				// we couldnt connect with library, so launch picker
@@ -126,15 +130,21 @@ public class ControlActivity extends Activity implements ViewFactory {
 			} else {
 				
 				// obey request to automatically pause
-				if(shouldPause) {
-					session.controlPlayPause();
-				}
+//				if(shouldPause) {
+//					session.controlPlayPause();
+//				}
 				
 				// TODO: fix this horrid hack
 				// for some reason we arent correctly disposing of the session threads we create
 				// so we purge any existing ones before creating a new one
-				session.purgeAllStatus();
-				status = session.createStatus(statusUpdate);
+				//session.purgeAllStatus();
+				//status = session.createStatus(statusUpdate);
+				status = session.singletonStatus(statusUpdate);
+				status.updateHandler(statusUpdate);
+				
+				// push update through to make sure we get updated
+				statusUpdate.sendEmptyMessage(Status.UPDATE_TRACK);
+
 			}
 
 		}
@@ -142,9 +152,13 @@ public class ControlActivity extends Activity implements ViewFactory {
 		public void onServiceDisconnected(ComponentName className) {
 			
 			// make sure we clean up our handler-specific status
-			if(status != null && session != null) {
-				session.deleteStatus(status);
-			}
+//			if(status != null && session != null) {
+//				session.deleteStatus(status);
+//			}
+			
+			Log.w(TAG, "onServiceDisconnected");
+			
+			status.updateHandler(null);
 			
 			backend = null;
 			session = null;
@@ -155,12 +169,12 @@ public class ControlActivity extends Activity implements ViewFactory {
 
 	protected boolean dragging = false;
 	
-	protected NotificationManager notifman;
-	public final static int NOTIF_PLAYING = 3;
+	//protected NotificationManager notifman;
+	//public final static int NOTIF_PLAYING = 3;
 	
 	protected String showingAlbumId = null;
 	
-	protected final static String PAUSE = "pause";
+	//protected final static String PAUSE = "pause";
 	
 	protected Handler statusUpdate = new Handler() {
 		@Override
@@ -173,6 +187,9 @@ public class ControlActivity extends Activity implements ViewFactory {
 				trackName.setText(status.getTrackName());
 				trackArtist.setText(status.getTrackArtist());
 				trackAlbum.setText(status.getTrackAlbum());
+
+				// fade new details up if requested
+				if(fadeUpNew) fadeview.keepAwake();
 				
 			case Status.UPDATE_COVER:
 				
@@ -198,31 +215,35 @@ public class ControlActivity extends Activity implements ViewFactory {
 				seekBar.setMax(status.getProgressTotal());
 				
 				// show notification when playing/hide when paused
-				switch(status.getPlayStatus()) {
-				case Status.STATE_PLAYING:
-					
-					Intent intent = new Intent(ControlActivity.this, ControlActivity.class);
-					intent.putExtra(Intent.EXTRA_KEY_EVENT, PAUSE);
-					PendingIntent pending = PendingIntent.getActivity(ControlActivity.this, -1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-					
-					Resources res = ControlActivity.this.getResources();
-					String title = res.getString(R.string.notif_title);
-					String caption = res.getString(R.string.notif_caption, status.getTrackName(), status.getTrackArtist());
-					
-					Notification notif = new Notification(R.drawable.stat_notify_musicplayer, null, System.currentTimeMillis());
-					notif.flags = Notification.FLAG_ONGOING_EVENT;
-					notif.setLatestEventInfo(ControlActivity.this, title, caption, pending);
-					
-					notifman.notify(NOTIF_PLAYING, notif);
-					break;
-				case Status.STATE_PAUSED:
-					notifman.cancel(NOTIF_PLAYING);
-					break;
-				}
+//				switch(status.getPlayStatus()) {
+//				case Status.STATE_PLAYING:
+//					
+//					Intent intent = new Intent(ControlActivity.this, ControlActivity.class);
+//					intent.putExtra(Intent.EXTRA_KEY_EVENT, PAUSE);
+//					PendingIntent pending = PendingIntent.getActivity(ControlActivity.this, -1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+//					
+//					Resources res = ControlActivity.this.getResources();
+//					String title = res.getString(R.string.notif_title);
+//					String caption = res.getString(R.string.notif_caption, status.getTrackName(), status.getTrackArtist());
+//					
+//					Notification notif = new Notification(R.drawable.stat_notify_musicplayer, null, System.currentTimeMillis());
+//					notif.flags = Notification.FLAG_ONGOING_EVENT;
+//					notif.setLatestEventInfo(ControlActivity.this, title, caption, pending);
+//					
+//					notifman.notify(NOTIF_PLAYING, notif);
+//					break;
+//				case Status.STATE_PAUSED:
+//					notifman.cancel(NOTIF_PLAYING);
+//					break;
+//				}
 				
 				// TODO: update menu items for shuffle, etc?
 			
 			case Status.UPDATE_PROGRESS:
+				if(ignoreNextTick) {
+					ignoreNextTick = false;
+					return;
+				}
 				seekPosition.setText(formatTime(status.getProgress()));
 				seekRemain.setText("-"+formatTime(status.getRemaining()));
 				if(!dragging)
@@ -273,23 +294,54 @@ public class ControlActivity extends Activity implements ViewFactory {
 	
 	protected FadeView fadeview;
 	
+	protected boolean stayConnected = false,
+		fadeDetails = true,
+		fadeUpNew = true,
+		vibrate = true;
+		
 	@Override
 	public void onStart() {
 		super.onStart();
-		this.bindService(new Intent(this, BackendService.class), connection, Context.BIND_AUTO_CREATE);
-
+		
+		this.stayConnected = this.prefs.getBoolean(this.getString(R.string.pref_background), this.stayConnected);
+		this.fadeDetails = this.prefs.getBoolean(this.getString(R.string.pref_fade), this.fadeDetails);
+		this.fadeUpNew = this.prefs.getBoolean(this.getString(R.string.pref_fadeupnew), this.fadeUpNew);
+		this.vibrate = this.prefs.getBoolean(this.getString(R.string.pref_vibrate), this.vibrate);
+		
+		this.fadeview.allowFade = this.fadeDetails;
+		this.fadeview.keepAwake();
+		
+		Intent service = new Intent(this, BackendService.class);
+		
+		if(this.stayConnected) {
+			// if were running background service, start now
+			this.startService(service);
+			
+		} else {
+			// otherwise make sure we kill the static background service
+			this.stopService(service);
+			
+		}
+		
+		// regardless of stayConnected, were always going to need a bound backend for this activity
+		this.bindService(service, connection, Context.BIND_AUTO_CREATE);
+		
 	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
-		if(session != null)
+//		if(session != null)
+//			session.purgeAllStatus();
+		if(!this.stayConnected && session != null)
 			session.purgeAllStatus();
 		this.unbindService(connection);
+		
 		
 	
 	}
 	
+	protected Vibrator vibrator;
 	protected SharedPreferences prefs;
 	protected boolean agreed = false;
 	
@@ -311,14 +363,17 @@ public class ControlActivity extends Activity implements ViewFactory {
 		
 	}
 	
-	public boolean shouldPause = false;
+	public final static int VIBRATE_LEN = 150;
+	protected boolean ignoreNextTick = false;
+	
+//	public boolean shouldPause = false;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		// before we go any further, make sure theyve agreed to EULA
-		this.prefs = this.getSharedPreferences(EULA, Context.MODE_PRIVATE);
+		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		this.agreed = prefs.getBoolean(EULA, false);
 		if(!this.agreed) {
 			// show eula wizard
@@ -330,13 +385,14 @@ public class ControlActivity extends Activity implements ViewFactory {
 		new UpdateHelper(this);
 		
 		
-		this.shouldPause = PAUSE.equals(this.getIntent().getStringExtra(Intent.EXTRA_KEY_EVENT));
 		
 		setContentView(R.layout.act_control);
 		
-		this.notifman = (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);
+//		this.notifman = (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);
+//		this.shouldPause = PAUSE.equals(this.getIntent().getStringExtra(Intent.EXTRA_KEY_EVENT));
 		
-
+		this.vibrator = (Vibrator)this.getSystemService(Context.VIBRATOR_SERVICE);
+		
 		// prepare volume toast view
 		LayoutInflater inflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.volume = inflater.inflate(R.layout.toa_volume, null, false);
@@ -381,6 +437,8 @@ public class ControlActivity extends Activity implements ViewFactory {
 				// scan to location in song
 				dragging = false;
 				session.controlProgress(seekBar.getProgress());
+				ignoreNextTick = true;
+				if(vibrate) vibrator.vibrate(VIBRATE_LEN);
 			}
 		});
 		
@@ -388,18 +446,21 @@ public class ControlActivity extends Activity implements ViewFactory {
 		this.controlPrev.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				session.controlPrev();
+				if(vibrate) vibrator.vibrate(VIBRATE_LEN);
 			}
 		});
 		
 		this.controlNext.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				session.controlNext();
+				if(vibrate) vibrator.vibrate(VIBRATE_LEN);
 			}
 		});
 		
 		this.controlPause.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				session.controlPlayPause();
+				if(vibrate) vibrator.vibrate(VIBRATE_LEN);
 			}
 		});
 		
@@ -467,6 +528,23 @@ public class ControlActivity extends Activity implements ViewFactory {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		
+		MenuItem search = menu.add(R.string.control_menu_search);
+		search.setIcon(android.R.drawable.ic_menu_search);
+		search.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+			public boolean onMenuItemClick(MenuItem item) {
+				ControlActivity.this.onSearchRequested();
+				return true;
+			}
+		});
+		
+		MenuItem artists = menu.add(R.string.control_menu_artists);
+		artists.setIcon(R.drawable.ic_search_category_music_artist);
+		artists.setIntent(new Intent(ControlActivity.this, ArtistsActivity.class));
+		
+		MenuItem playlists = menu.add("Playlists");
+		playlists.setEnabled(false);
+		playlists.setIcon(R.drawable.ic_search_category_music_song);
+		
 		this.repeat = menu.add("");
 		this.repeat.setIcon(android.R.drawable.ic_menu_rotate);
 		this.repeat.setOnMenuItemClickListener(new OnMenuItemClickListener() {
@@ -486,7 +564,7 @@ public class ControlActivity extends Activity implements ViewFactory {
 		});
 		
 		this.shuffle = menu.add("");
-		this.shuffle.setIcon(android.R.drawable.ic_menu_revert);
+		this.shuffle.setIcon(R.drawable.ic_menu_shuffle);
 		this.shuffle.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 			public boolean onMenuItemClick(MenuItem item) {
 				
@@ -502,38 +580,23 @@ public class ControlActivity extends Activity implements ViewFactory {
 			}
 		});
 		
-		
-		MenuItem search = menu.add(R.string.control_menu_search);
-		search.setIcon(android.R.drawable.ic_menu_search);
-		search.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			public boolean onMenuItemClick(MenuItem item) {
-				ControlActivity.this.onSearchRequested();
-				return true;
-			}
-		});
-		
-		MenuItem browse = menu.add(R.string.control_menu_artists);
-		browse.setIcon(android.R.drawable.ic_menu_agenda);
-		browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-			public boolean onMenuItemClick(MenuItem item) {
-				ControlActivity.this.startActivity(new Intent(ControlActivity.this, ArtistsActivity.class));
-				return true;
-			}
-		});
-		
 		MenuItem pick = menu.add(R.string.control_menu_pick);
 		pick.setIcon(android.R.drawable.ic_menu_share);
 		pick.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 			public boolean onMenuItemClick(MenuItem item) {
-				
-				// launch off library picking and destroy ourselves
+				// launch off library picking
 				ControlActivity.this.startActivity(new Intent(ControlActivity.this, LibraryActivity.class));
-
 				return true;
 			}
 		});
 		
-		
+		MenuItem settings = menu.add("Settings");
+		settings.setIcon(android.R.drawable.ic_menu_preferences);
+		settings.setIntent(new Intent(ControlActivity.this, PrefsActivity.class));
+
+		MenuItem about = menu.add("About");
+		settings.setIcon(android.R.drawable.ic_menu_help);
+		about.setIntent(new Intent(ControlActivity.this, WizardActivity.class));
 		
 		
 		return true;

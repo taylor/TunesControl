@@ -30,13 +30,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.tunescontrol.AlphaView.AlphaScrollable;
 import org.tunescontrol.daap.Library;
 import org.tunescontrol.daap.RequestHelper;
 import org.tunescontrol.daap.Response;
 import org.tunescontrol.daap.Session;
 import org.tunescontrol.daap.ResponseParser.TagListener;
 import org.tunescontrol.older.ExpandedActivity;
+import org.tunescontrol.older.AlphaView.AlphaScrollable;
 import org.tunescontrol.util.UserTask;
 
 import android.app.ListActivity;
@@ -143,14 +143,14 @@ public class ArtistsActivity extends ListActivity implements AlphaScrollable {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.gen_list);
+		setContentView(R.layout.gen_list_fast);
 		
 		((TextView)this.findViewById(android.R.id.empty)).setText(R.string.artists_empty);
 
 		// register ourselves with the alpha view
-		AlphaView alpha = (AlphaView)this.findViewById(R.id.alpha);
-		alpha.setVisibility(View.VISIBLE);
-		alpha.target = this;
+		//AlphaView alpha = (AlphaView)this.findViewById(R.id.alpha);
+		//alpha.setVisibility(View.VISIBLE);
+		//alpha.target = this;
 
 		this.adapter = new ArtistsAdapter(this);
 		this.setListAdapter(adapter);

@@ -104,7 +104,7 @@ public class Session {
 		
 	}
 	
-	public Status createStatus(Handler handler) {
+	private Status createStatus(Handler handler) {
 		Status stat = new Status(this, handler);
 		this.registerStatus(stat);
 		stat.fetchUpdate();
@@ -112,11 +112,19 @@ public class Session {
 		
 	}
 	
-	public void deleteStatus(Status status) {
-		// remove the status from any updates and destory its internal thread
-		this.listeners.remove(status);
-		status.destroy();
-		
+//	public void deleteStatus(Status status) {
+//		// remove the status from any updates and destory its internal thread
+//		this.listeners.remove(status);
+//		status.destroy();
+//		
+//	}
+	
+	protected Status singleton = null;
+	
+	public synchronized Status singletonStatus(Handler handler) {
+		if(singleton == null || singleton.destroyThread)
+			singleton = this.createStatus(handler);
+		return singleton;
 	}
 	
 	
@@ -134,6 +142,7 @@ public class Session {
 		for(Status status : listeners)
 			status.destroy();
 		listeners.clear();
+		this.singleton = null;
 	}
 
 	protected void notifyStatus() {

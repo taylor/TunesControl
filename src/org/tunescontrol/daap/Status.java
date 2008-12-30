@@ -51,7 +51,14 @@ public class Status {
 	public String albumId = "";
 	
 	protected final Session session;
-	protected final Handler update;
+	protected Handler update = null;
+	
+	protected int failures = 0;
+	public final static int MAX_FAILURES = 20; 
+	
+	public void updateHandler(Handler handler) {
+		this.update = handler;
+	}
 	
 	public final static int UPDATE_PROGRESS = 2,
 		UPDATE_STATE = 3,
@@ -66,6 +73,7 @@ public class Status {
 				// when in playing state, keep moving progress forward
 				while(playStatus == STATE_PLAYING) {
 					Log.d(TAG, "thread entering playing loop");
+					if(destroyThread) return;
 					long anchor = System.currentTimeMillis();
 					try {
 						Thread.sleep(1000);
@@ -79,7 +87,8 @@ public class Status {
 					
 					// update progress and gui
 					progressRemain -= (System.currentTimeMillis() - anchor);
-					update.sendEmptyMessage(UPDATE_PROGRESS);
+					if(update != null)
+						update.sendEmptyMessage(UPDATE_PROGRESS);
 					
 					// trigger a forced update if we seem to gone past end of song
 					if(progressRemain <= 0) {
@@ -132,6 +141,8 @@ public class Status {
 					// TODO: check for normal timeout here instead of destroying all the time
 					//Log.e(TAG, "something bad happened in keepalive thread, so killing");
 					e.printStackTrace();
+					if(failures++ > MAX_FAILURES)
+						destroy();
 					//destroy();
 				}
 
@@ -142,6 +153,7 @@ public class Status {
 	public void destroy() {
 		// destroy our internal thread
 		Log.d(TAG, "trying to destroy internal status thread");
+		if(this.destroyThread) return;
 		this.destroyThread = true;
 		this.progress.interrupt();
 		this.progress.stop();
@@ -183,6 +195,8 @@ public class Status {
 				} catch (Exception e) {
 					e.printStackTrace();
 					//destroy();
+					if(failures++ > MAX_FAILURES)
+						destroy();
 				}
 			}
 		}).start();
@@ -266,7 +280,8 @@ public class Status {
 		this.progressTotal = resp.getNumberLong("cast");
 		
 		// send off updated event to gui
-		this.update.sendEmptyMessage(updateType);
+		if(update != null)
+			this.update.sendEmptyMessage(updateType);
 		
 		// TODO: retrigger the keepalive thread with new revision number
 		
@@ -290,7 +305,8 @@ public class Status {
 						e.printStackTrace();
 					}
 					coverEmpty = (coverCache == null);
-					update.sendEmptyMessage(UPDATE_COVER);
+					if(update != null)
+						update.sendEmptyMessage(UPDATE_COVER);
 				}
 			}).start();
 		}

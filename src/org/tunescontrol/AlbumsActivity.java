@@ -129,7 +129,7 @@ public class AlbumsActivity extends ListActivity {
 		((TextView)this.findViewById(android.R.id.empty)).setText(R.string.albums_empty);
 		
 		this.artist = this.getIntent().getStringExtra(Intent.EXTRA_TITLE);
-
+		
 		this.list = this.getListView();
 		this.adapter = new AlbumsAdapter(this);
 		this.setListAdapter(adapter);
@@ -281,14 +281,14 @@ public class AlbumsActivity extends ListActivity {
 					Log.d(TAG, String.format("MEMORY cache hit for %s", itemid.toString()));
 				} else {
 					
-					File cache = new File(AlbumsActivity.this.getCacheDir(), itemid.toString());
-					if(cache.exists()) {
-						
-						// first check if we have a local cache
-						Log.d(TAG, String.format("disk cache hit for %s", itemid.toString()));
-						bitmap = BitmapFactory.decodeFile(cache.toString());
-
-					} else {
+//					File cache = new File(AlbumsActivity.this.getCacheDir(), itemid.toString());
+//					if(cache.exists()) {
+//						
+//						// first check if we have a local cache
+//						Log.d(TAG, String.format("disk cache hit for %s", itemid.toString()));
+//						bitmap = BitmapFactory.decodeFile(cache.toString());
+//
+//					} else {
 					
 						// fetch the album cover from itunes
 						byte[] raw = RequestHelper.request(String.format("%s/databases/%d/groups/%d/extra_data/artwork?session-id=%s&mw=55&mh=55&group-type=albums",
@@ -296,11 +296,11 @@ public class AlbumsActivity extends ListActivity {
 						bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
 						//GET /databases/38/groups/233/extra_data/artwork?session-id=2031664365&revision-number=201&mw=55&mh=55&group-type=albums HTTP/1.1\r\n
 						// cache the image locally so we can find it faster in future
-						OutputStream out = new FileOutputStream(cache);
-						out.write(raw);
-						out.close();
-						
-					}
+//						OutputStream out = new FileOutputStream(cache);
+//						out.write(raw);
+//						out.close();
+//						
+//					}
 					
 					// if SOMEHOW (404, etc) this image was still null, then save as blank
 					if(bitmap == null)

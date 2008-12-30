@@ -30,6 +30,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>UserTask enables proper and easy use of the UI thread. This class allows to
@@ -131,7 +133,7 @@ public abstract class UserTask<Params, Progress, Result> {
     private static final String LOG_TAG = "UserTask";
 
     private static final int CORE_POOL_SIZE = 4;
-    private static final int MAXIMUM_POOL_SIZE = 10;
+    private static final int MAXIMUM_POOL_SIZE = 50;
     private static final int KEEP_ALIVE = 10;
 
     private static final BlockingQueue<Runnable> sWorkQueue =
@@ -142,13 +144,64 @@ public abstract class UserTask<Params, Progress, Result> {
 
         public Thread newThread(Runnable r) {
             final Thread thread = new Thread(r, "UserTask #" + mCount.getAndIncrement());
-            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
             return thread;
         }
     };
-
-    private static final ThreadPoolExecutor sExecutor = new ThreadPoolExecutor(CORE_POOL_SIZE,
-            MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, sWorkQueue, sThreadFactory);
+    
+    private static final ThreadPoolExecutor sExecutor = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, sWorkQueue, sThreadFactory);
+//    
+//    public static void pause() {
+//    	sExecutor.pause();
+//    }
+//    
+//    public static void resume() {
+//    	sExecutor.resume();
+//    }
+//    
+//    public static class PausableThreadPoolExecutor extends ThreadPoolExecutor {
+//		private boolean isPaused;
+//		private ReentrantLock pauseLock = new ReentrantLock();
+//		private Condition unpaused = pauseLock.newCondition();
+//
+//		public PausableThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
+//			super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+//		}
+//
+//		protected void beforeExecute(Thread t, Runnable r) {
+//			super.beforeExecute(t, r);
+//			pauseLock.lock();
+//			try {
+//				while (isPaused)
+//					unpaused.await();
+//			} catch (InterruptedException ie) {
+//				t.interrupt();
+//			} finally {
+//				pauseLock.unlock();
+//			}
+//		}
+//
+//		public void pause() {
+//			pauseLock.lock();
+//			try {
+//				isPaused = true;
+//			} finally {
+//				pauseLock.unlock();
+//			}
+//		}
+//
+//		public void resume() {
+//			pauseLock.lock();
+//			try {
+//				isPaused = false;
+//				unpaused.signalAll();
+//			} finally {
+//				pauseLock.unlock();
+//			}
+//		}
+//	}
+//    	 
+    
 
     private static final int MESSAGE_POST_RESULT = 0x1;
     private static final int MESSAGE_POST_PROGRESS = 0x2;

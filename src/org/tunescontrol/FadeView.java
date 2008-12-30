@@ -45,6 +45,8 @@ public class FadeView extends RelativeLayout {
 	protected boolean foundViews = false;
 	protected View info, seek;
 	
+	public boolean allowFade = true;
+	
 	public Handler fadeDownHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -71,7 +73,7 @@ public class FadeView extends RelativeLayout {
 		this.prepare(context);
 	}
 	
-	protected final static long FADE_DELAY = 3000;
+	protected final static long FADE_DELAY = 5000;
 	
 	protected Animation fadeDown, fadeUp;
 	protected Timer fadeTimer = null;
@@ -166,6 +168,8 @@ public class FadeView extends RelativeLayout {
 	}
 
 	public void startFade() {
+		if(!this.allowFade) return;
+		
 		if(this.fadeTimer != null)
 			this.fadeTimer.cancel();
 		
