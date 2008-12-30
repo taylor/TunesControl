@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+	Copyright (C) 2008 Jeffrey Sharkey, http://jsharkey.org/
+	
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<ScrollView
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:layout_weight="1"
+	>
+	
+	<LinearLayout
+		android:orientation="vertical"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:padding="10dip"
+		>
+	
+		<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/wizard_title1"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			/>
+
+		<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:text="@string/wizard_title2"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			/>
+			
+
+		<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:text="Before we get started, we need to get some legal information out of the way.  TunesRemote is provided under an open-source GPLv3 license.  Here are a few key points:\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details."
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			/>
+	
+		<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:autoLink="web"
+			android:text="You can view the full text at http://www.gnu.org/licenses/gpl-3.0.txt"
+			android:textSize="14sp"
+			android:textColor="#bebebe"
+			/>
+			
+	 	<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:text="About and Credits"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			/>
+	 
+		<TextView
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:paddingTop="10dip"
+			android:autoLink="web"
+			android:text="Copyright \u00a9 2008 Jeffrey Sharkey http://jsharkey.org, DACP protocol details can be found at http://dacp.jsharkey.org\n\nBased in part on the JmDNS Bonjour library, provided under a LGPL license, http://jmdns.sourceforge.net\n\niTunes is a registered trademark of Apple, Inc., registered in the U.S. and other countries.  This program makes no claim to be either authorized or approved by Apple, Inc."
+			android:textSize="14sp"
+			android:textColor="#bebebe"
+			/>
+		
+	</LinearLayout>
+
+</ScrollView>
+

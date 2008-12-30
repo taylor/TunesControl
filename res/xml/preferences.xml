@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<CheckBoxPreference
+		android:key="@string/pref_background"
+		android:title="Stay connected in background"
+		android:summary="Keep background service running to speed up launch"
+		android:defaultValue="false"
+		/>
+		
+	<PreferenceCategory
+		android:title="Interface settings">
+	
+		<CheckBoxPreference
+			android:key="@string/pref_fade"
+			android:title="Fade track details"
+			android:summary="After 5 seconds, fade the track details and hide them"
+			android:defaultValue="true"
+			/>
+	
+		<CheckBoxPreference
+			android:key="@string/pref_fadeupnew"
+			android:title="Fade up on new track"
+			android:summary="Show new details when track is changed"
+			android:defaultValue="true"
+			android:dependency="@string/pref_fade"
+			/>
+	
+		<CheckBoxPreference
+			android:key="@string/pref_vibrate"
+			android:title="Vibrate on controls"
+			android:summary="Give light vibration feedback when pausing or changing tracks"
+			android:defaultValue="true"
+			/>
+		
+	</PreferenceCategory>
+
+</PreferenceScreen>
