@@ -203,7 +203,7 @@ public class LibraryActivity extends Activity {
 
 		} catch(Exception e) {
 			
-			Log.d(TAG, String.format("ohhai we had problemz, probably still unpaired"));
+			Log.e(TAG, String.format("ohhai we had problemz, probably still unpaired"), e);
 			
 			// we probably had a pairing issue, so start the pairing server and wait for trigger
 			Intent intent = new Intent(LibraryActivity.this, PairingActivity.class);

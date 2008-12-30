@@ -99,8 +99,8 @@ public class RequestHelper {
 		URLConnection connection = url.openConnection();
 		connection.setRequestProperty("Viewer-Only-Client", "1");
 		if(!keepalive) {
-			connection.setConnectTimeout(2000);
-			connection.setReadTimeout(2000);
+			connection.setConnectTimeout(10000);
+			connection.setReadTimeout(10000);
 		}
 		connection.connect();
 		InputStream is = connection.getInputStream();
