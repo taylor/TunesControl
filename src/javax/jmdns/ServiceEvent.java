@@ -12,7 +12,6 @@ public abstract class ServiceEvent extends EventObject
     public ServiceEvent(Object source)
     {
         super(source);
-        // TODO Auto-generated constructor stub
     }
 
     /**

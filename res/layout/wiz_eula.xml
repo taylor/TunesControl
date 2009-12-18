@@ -76,7 +76,7 @@
 			android:layout_height="wrap_content"
 			android:paddingTop="10dip"
 			android:autoLink="web"
-			android:text="Copyright \u00a9 2008 Jeffrey Sharkey http://jsharkey.org, DACP protocol details can be found at http://dacp.jsharkey.org\n\nBased in part on the JmDNS Bonjour library, provided under a LGPL license, http://jmdns.sourceforge.net\n\niTunes is a registered trademark of Apple, Inc., registered in the U.S. and other countries.  This program makes no claim to be either authorized or approved by Apple, Inc."
+			android:text="Copyright \u00a9 2008 Jeffrey Sharkey http://jsharkey.org, DACP protocol details can be found at http://dacp.jsharkey.org\n\nModified \u00a9 2009 by Melloware http://melloware.com\n\nBased in part on the JmDNS Bonjour library, provided under a LGPL license, http://jmdns.sourceforge.net\n\niTunes is a registered trademark of Apple, Inc., registered in the U.S. and other countries.  This program makes no claim to be either authorized or approved by Apple, Inc."
 			android:textSize="14sp"
 			android:textColor="#bebebe"
 			/>

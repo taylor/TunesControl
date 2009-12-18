@@ -17,6 +17,8 @@
 
 package org.tunescontrol.daap;
 
+import org.tunescontrol.util.ThreadExecutor;
+
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.util.Log;
@@ -139,13 +141,10 @@ public class Status {
 							session.getRequestBase(), revision, session.sessionId), true));
 				} catch (Exception e) {
 					// TODO: check for normal timeout here instead of destroying all the time
-					//Log.e(TAG, "something bad happened in keepalive thread, so killing");
-					e.printStackTrace();
+					Log.d(TAG, String.format("Exception in keepalive thread, so killing: %s", e.getMessage()));
 					if(failures++ > MAX_FAILURES)
 						destroy();
-					//destroy();
 				}
-
 			}
 		}
 	});
@@ -184,8 +183,9 @@ public class Status {
 	protected int errors = 0;
 	
 	public void fetchUpdate() {
+	   Log.d(TAG, "Fetching Update From Server...");
 		// force a status update, will pass along to parseUpdate()
-		new Thread(new Runnable() {
+	   ThreadExecutor.runTask(new Runnable() {
 			public void run() {
 				try {
 					// using revision-number=1 will make sure we return instantly
@@ -193,13 +193,12 @@ public class Status {
 					parseUpdate(RequestHelper.requestParsed(String.format("%s/ctrl-int/1/playstatusupdate?revision-number=%d&session-id=%s",
 							session.getRequestBase(), 1, session.sessionId), false));
 				} catch (Exception e) {
-					e.printStackTrace();
-					//destroy();
+					Log.w(TAG, e);
 					if(failures++ > MAX_FAILURES)
 						destroy();
 				}
 			}
-		}).start();
+		});
 		
 	}
 	
@@ -295,7 +294,7 @@ public class Status {
 	public void fetchCover() {
 		if(coverCache == null) {
 			// spawn thread to fetch coverart
-			new Thread(new Runnable() {
+		   ThreadExecutor.runTask(new Runnable() {
 				public void run() {
 					try {
 						// http://192.168.254.128:3689/ctrl-int/1/nowplayingartwork?mw=320&mh=320&session-id=1940361390
@@ -308,7 +307,7 @@ public class Status {
 					if(update != null)
 						update.sendEmptyMessage(UPDATE_COVER);
 				}
-			}).start();
+			});
 		}
 	}
 	

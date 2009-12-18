@@ -12,7 +12,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.TimerTask;
 import java.util.Vector;
-import java.util.logging.Logger;
 
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.impl.DNSRecord.Pointer;
@@ -27,7 +26,6 @@ import javax.jmdns.impl.DNSRecord.Text;
  */
 public class ServiceInfoImpl extends ServiceInfo implements DNSListener
 {
-    private static Logger logger = Logger.getLogger(ServiceInfoImpl.class.getName());
     private JmDNSImpl dns;
     
     // State machine

@@ -5,7 +5,6 @@
 package javax.jmdns.impl;
 
 import java.util.ArrayList;
-import java.util.logging.Logger;
 
 /**
  * DNSState defines the possible states for services registered with JmDNS.
@@ -15,7 +14,6 @@ import java.util.logging.Logger;
  */
 public class DNSState implements Comparable
 {
-    private static Logger logger = Logger.getLogger(DNSState.class.getName());
 
     private final String name;
 

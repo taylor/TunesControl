@@ -17,12 +17,7 @@
 
 package org.tunescontrol;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,21 +26,11 @@ import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 import javax.jmdns.impl.DNSConstants;
-import javax.jmdns.impl.DNSEntry;
 import javax.jmdns.impl.DNSRecord;
 import javax.jmdns.impl.JmDNSImpl;
 
-import org.tunescontrol.SearchActivity.SearchAdapter;
-import org.tunescontrol.daap.Library;
-import org.tunescontrol.daap.PairingServer;
-import org.tunescontrol.daap.Session;
-import org.tunescontrol.daap.Status;
-
-
-
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -64,27 +49,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.MenuItem.OnMenuItemClickListener;
-import android.view.View.OnClickListener;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.OnItemClickListener;
 
+/**
+ * Show a list of all libraries found on local wifi network.
+ * Should have refresh button easly accessibly, and also detect wifi issues.
+ */
 public class LibraryActivity extends Activity {
-	
-	// show a list of all libraries found on local wifi network
-	// should have refresh button easly accessibly, and also detect wifi issues
-
 	
 	public final static String TAG = LibraryActivity.class.toString();
 	
-	public static JmDNS jmdns;
-	public static JmDNSImpl impl;
+	public static JmDNS jmdns = null;
+	public static JmDNSImpl impl = null;
 	protected ServiceListener listener;
 	protected ServiceInfo info;
 	
@@ -112,7 +92,7 @@ public class LibraryActivity extends Activity {
 
 	protected void startProbe() throws Exception {
 		
-		if(this.jmdns != null)
+		if(jmdns != null)
 			this.stopProbe();
 		
 		adapter.known.clear();
@@ -129,22 +109,22 @@ public class LibraryActivity extends Activity {
 		
 		Log.d(TAG, String.format("found intaddr=%d, addr=%s", intaddr, addr.toString()));
 
-		this.jmdns = JmDNS.create(addr, HOSTNAME);
-		this.jmdns.addServiceListener(TOUCH_ABLE_TYPE, listener);
-		this.jmdns.addServiceListener(DACP_TYPE, listener);
+		jmdns = JmDNS.create(addr, HOSTNAME);
+		jmdns.addServiceListener(TOUCH_ABLE_TYPE, listener);
+		jmdns.addServiceListener(DACP_TYPE, listener);
 		
-		this.impl = (JmDNSImpl)jmdns;
+		impl = (JmDNSImpl)jmdns;
 		
 		
 	}
 	
 	protected void stopProbe() {
 		
-		this.jmdns.removeServiceListener(TOUCH_ABLE_TYPE, listener);
-		this.jmdns.removeServiceListener(DACP_TYPE, listener);
-		this.jmdns.close();
-		this.jmdns = null;
-		this.impl = null;
+		jmdns.removeServiceListener(TOUCH_ABLE_TYPE, listener);
+		jmdns.removeServiceListener(DACP_TYPE, listener);
+		jmdns.close();
+		jmdns = null;
+		impl = null;
 		
 		// trigger adapter refresh
 		
@@ -258,7 +238,6 @@ public class LibraryActivity extends Activity {
 		
 		this.listener = new ServiceListener() {
 
-			@Override
 			public void serviceAdded(ServiceEvent event) {
 				
 				// someone is yelling about their touch-able service (prolly itunes)
@@ -288,33 +267,8 @@ public class LibraryActivity extends Activity {
 		try {
 			this.startProbe();
 		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-
-	
-//		// wait a hiccup to finish remaining packets, then try finding txt info
-//		new Thread(new Runnable() {
-//			public void run() {
-//				
-//				try {
-//					Thread.sleep(500);
-//					
-//					// try finding txt records
-//					DNSEntry entry = impl.getCache().get(name + "." + type, DNSConstants.TYPE_TXT, DNSConstants.CLASS_IN);
-//					Log.w(TAG, String.format("yay found entry=%s", entry.toString()));
-//					
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//				
-//				
-//				
-//			}
-//		}).start();
-		
-		
+		   Log.d(TAG, String.format("onCreate Error: %s", e.getMessage()));
+		}	
 	}
 	
     @Override
@@ -329,7 +283,7 @@ public class LibraryActivity extends Activity {
 				try {
 					startProbe();
 				} catch (Exception e) {
-					e.printStackTrace();
+				   Log.d(TAG, String.format("onCreate Error: %s", e.getMessage()));
 				}
 				return true;
 			}
@@ -446,10 +400,10 @@ public class LibraryActivity extends Activity {
 				
 				// try finding useful txt header strings
 				String[] headers = new String(txtrec.text).split("[\u0000-\u001f]");
-				String type = "", title = "", library = "";
+				String title = "", library = "";
 				for(String header : headers) {
-					if(header.startsWith("DvTy"))
-						type = header.substring(5);
+//					if(header.startsWith("DvTy"))
+//						type = header.substring(5);
 					if(header.startsWith("CtlN"))
 						title = header.substring(5);
 					if(header.startsWith("DbId"))
@@ -459,7 +413,6 @@ public class LibraryActivity extends Activity {
 				// find the parent computer running this service
 				DNSRecord.Service srvrec = (DNSRecord.Service)impl.getCache().get(dnsname, DNSConstants.TYPE_SRV, DNSConstants.CLASS_IN);
 				String hostname = srvrec.server;
-				int hostport = srvrec.port;
 	
 				// finally, resolve A record for parent host computer
 				DNSRecord.Address arec = (DNSRecord.Address)impl.getCache().get(hostname, DNSConstants.TYPE_A, DNSConstants.CLASS_IN);
@@ -470,7 +423,7 @@ public class LibraryActivity extends Activity {
 				((TextView)convertView.findViewById(android.R.id.text2)).setText(String.format("%s - %s", addr, library));
 				
 			} catch(Exception e) {
-				e.printStackTrace();
+			   Log.d(TAG, String.format("onCreate Error: %s", e.getMessage()));
 				((TextView)convertView.findViewById(android.R.id.text1)).setText("");
 				((TextView)convertView.findViewById(android.R.id.text2)).setText("");
 			}

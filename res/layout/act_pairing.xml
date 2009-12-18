@@ -42,7 +42,7 @@
 		/>
 
 	<TextView
-		android:text="0 0 0 0"
+		android:text="5 3 0 9"
 		android:layout_width="fill_parent" 
 		android:layout_height="wrap_content"
 		android:paddingBottom="10dip"

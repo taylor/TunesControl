@@ -12,8 +12,6 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import android.util.Log;
 
@@ -27,7 +25,6 @@ public class HostInfo
 {
 	public final static String TAG = HostInfo.class.toString();
 	
-    private static Logger logger = Logger.getLogger(HostInfo.class.getName());
     protected String name;
     protected InetAddress address;
     protected NetworkInterface interfaze;
@@ -52,8 +49,7 @@ public class HostInfo
             catch (Exception exception)
             {
                 // FIXME Shouldn't we take an action here?
-                logger.log(Level.WARNING, "LocalHostInfo() exception ", exception);
-                Log.d(TAG, "exception while trying to find interface");
+                Log.d(TAG, "LocalHostInfo() exception: " + exception.getMessage());
             }
         }
     }

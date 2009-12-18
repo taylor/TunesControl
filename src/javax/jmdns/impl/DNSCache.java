@@ -8,7 +8,6 @@ package javax.jmdns.impl;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 /**
  * A table of DNS entries. This is a hash table which
@@ -43,7 +42,6 @@ import java.util.logging.Logger;
  */
 public class DNSCache
 {
-    private static Logger logger = Logger.getLogger(DNSCache.class.getName());
     // Implementation note:
     // We might completely hide the existence of CacheNode's in a future version
     // of DNSCache. But this will require to implement two (inner) classes for
@@ -73,7 +71,6 @@ public class DNSCache
      */
     public static class CacheNode
     {
-        private static Logger logger = Logger.getLogger(CacheNode.class.getName());
         private DNSEntry value;
         private CacheNode next;
 

@@ -23,23 +23,23 @@ import java.util.Hashtable;
 import javax.jmdns.ServiceInfo;
 
 import org.tunescontrol.daap.PairingServer;
+import org.tunescontrol.util.ThreadExecutor;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 
 public class PairingActivity extends Activity {
 	
 	public final static String TAG = PairingActivity.class.toString();
 	
-	protected PairingServer server;
-	protected ServiceInfo pairservice;
-	
-	protected String address, library;
+	private volatile PairingServer pairingServer;
+	private ServiceInfo pairservice;
+	private String address, library;
 
 	public Handler paired = new Handler() {
 		@Override
@@ -64,16 +64,21 @@ public class PairingActivity extends Activity {
 		
 		// show dialog to user, explaining what happens next
 		setContentView(R.layout.act_pairing);
+		Log.d(TAG, "Begin pairing process...");
 		
 		this.address = this.getIntent().getStringExtra(BackendService.EXTRA_ADDRESS);
 		this.library = this.getIntent().getStringExtra(BackendService.EXTRA_LIBRARY);
 		
 		// this activity should start the pairing service
 		// the pairing server will report to us when someone tries pairing
-		server = new PairingServer(paired);
+		pairingServer = new PairingServer(paired);
 
+		String deviceName = Settings.System.getString(this.getContentResolver(), android.os.Build.DEVICE);
+		if (deviceName == null) {
+		   deviceName = "Device";
+      }
 		Hashtable values = new Hashtable();
-		values.put("DvNm", "Android device");
+		values.put("DvNm", "Android " + deviceName);
 		values.put("RemV", "10000");
 		values.put("DvTy", "iPod");
 		values.put("RemN", "Remote");
@@ -82,7 +87,7 @@ public class PairingActivity extends Activity {
 		
 		// NOTE: this "Pair" above is *not* the guid--we generate and return that in PairingServer
 		
-		pairservice = ServiceInfo.create(LibraryActivity.REMOTE_TYPE, "0000000000000000000000000000000000000006", 1024, 0, 0, values);
+		pairservice = ServiceInfo.create(LibraryActivity.REMOTE_TYPE, "0000000000000000000000000000000000000006", PairingServer.PORT, 0, 0, values);
 
 	}
 	
@@ -90,17 +95,17 @@ public class PairingActivity extends Activity {
 	public void onStart() {
 		super.onStart();
 		
-		new Thread(new Runnable() {
+		ThreadExecutor.runTask(new Runnable() {
 			public void run() {
 				try {
-					server.start();
+				   Log.i(TAG, "Starting PairingServer...");
+				   pairingServer.start();
 					LibraryActivity.jmdns.registerService(pairservice);
-				} catch (IOException e1) {
-					e1.printStackTrace();
+				} catch (IOException ex) {
+					Log.w(TAG, ex);
 				}
-
 			}
-		}).start();
+		});
 		
 	}
 	
@@ -108,13 +113,14 @@ public class PairingActivity extends Activity {
 	public void onStop() {
 		super.onStop();
 		
-		new Thread(new Runnable() {
+		ThreadExecutor.runTask(new Runnable() {
 			public void run() {
-				server.stop();
+			   Log.i(TAG, "Stopping PairingServer...");
+			   pairingServer.destroy();
+			   pairingServer = null;
 				LibraryActivity.jmdns.unregisterService(pairservice);
-
 			}
-		}).start();
+		});
 	
 	}
 

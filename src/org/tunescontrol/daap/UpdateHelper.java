@@ -6,6 +6,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import org.json.JSONObject;
+import org.tunescontrol.util.ThreadExecutor;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -78,7 +79,7 @@ public class UpdateHelper implements Runnable {
 		this.userAgent = String.format("%s/%s (%d)", packageName, versionName, versionCode);
 		
 		// spawn thread to check for update
-		new Thread(this).start();
+		ThreadExecutor.runTask(this);
 
 	}
 

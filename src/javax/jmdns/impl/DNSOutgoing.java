@@ -8,8 +8,6 @@ package javax.jmdns.impl;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.LinkedList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * An outgoing DNS message.
@@ -25,7 +23,6 @@ public final class DNSOutgoing
      */
     public static boolean USE_DOMAIN_NAME_COMPRESSION = true;
     
-    private static Logger logger = Logger.getLogger(DNSOutgoing.class.getName());
     int id;
     int flags;
     private boolean multicast;
@@ -256,11 +253,6 @@ public final class DNSOutgoing
                 if (offset != null)
                 {
                     int val = offset.intValue();
-
-                    if (val > off)
-                    {
-                        logger.log(Level.WARNING, "DNSOutgoing writeName failed val=" + val + " name=" + name);
-                    }
 
                     writeByte((val >> 8) | 0xC0);
                     writeByte(val & 0xFF);

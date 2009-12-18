@@ -17,29 +17,13 @@
 
 package org.tunescontrol.daap;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import android.util.Log;
 
 public class Response extends HashMap<String,Object> {
-	
-	
-//	public static Response parseRaw(byte[] raw) throws IOException {
-//		Response resp = new Response();
-//		return parseRaw(resp, new DataInputStream(new ByteArrayInputStream(raw)), -1);
-//	}
-	
-
-	
 	
 	public Response getNested(String key) throws Exception {
 		return (Response)this.get(key);
@@ -84,11 +68,6 @@ public class Response extends HashMap<String,Object> {
 	}
 	
 
-	
-	
-	
-	
-	
 	
 	// http://192.168.254.128:3689/login?pairing-guid=0x0000000000000001
 	public final static byte[] MSG_LOGIN = new byte[] { 0x6d, 0x6c, 0x6f, 0x67, 0x00, 0x00, 0x00, 0x18, 0x6d, 0x73, 0x74, 0x74, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, (byte) 0xc8, 0x6d, 0x6c, 0x69, 0x64, 0x00, 0x00, 0x00, 0x04, 0x64, (byte) 0x8a, (byte) 0x86, 0x1f };
@@ -802,14 +781,7 @@ public class Response extends HashMap<String,Object> {
         mudl   0      
 
 	 */
-	
-	
-	
-	
-	
-	
-	
-	
+		
 }
 
 
