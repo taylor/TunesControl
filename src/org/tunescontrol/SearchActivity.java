@@ -40,9 +40,12 @@ import android.os.IBinder;
 import android.os.Message;
 import android.provider.SearchRecentSuggestions;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
@@ -144,6 +147,8 @@ public class SearchActivity extends Activity {
 
       this.blank = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
 
+      this.registerForContextMenu(this.list);
+
       // final Animation slide = AnimationUtils.loadAnimation(this,
       // R.anim.slide_right);
 
@@ -162,6 +167,50 @@ public class SearchActivity extends Activity {
 
          }
       });
+
+   }
+
+   @Override
+   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+
+      final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+
+      try {
+         // create context menu to play entire artist
+         final Response resp = (Response) adapter.getItem(info.position);
+         menu.setHeaderTitle(resp.getString("minm"));
+         final String artistName = resp.getString("asar");
+
+         final MenuItem play = menu.add(R.string.search_menu_play_found);
+         play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                session.controlPlaySearch(query, info.position);
+               return true;
+            }
+         });
+
+         final MenuItem queue = menu.add(R.string.search_menu_open_artist);
+         queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = new Intent(SearchActivity.this, AlbumsActivity.class);
+                intent.putExtra(Intent.EXTRA_TITLE, artistName);
+                SearchActivity.this.startActivity(intent);
+               return true;
+            }
+         });
+
+         /*final MenuItem browse = menu.add(R.string.search_menu_open_album);
+         browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+               Intent intent = new Intent(SearchActivity.this, TracksActivity.class);
+               intent.putExtra(Intent.EXTRA_TITLE, albumid);
+               SearchActivity.this.startActivity(intent);
+               return true;
+            }
+         });*/
+      } catch (Exception e) {
+         Log.w(TAG, "onCreateContextMenu:" + e.getMessage());
+      }
 
    }
 
@@ -236,6 +285,8 @@ public class SearchActivity extends Activity {
                public void run() {
                   Log.d(TAG, "getView() is triggering a new page to be loaded");
                   totalResults = library.readSearch(SearchAdapter.this, search, getCount(), PAGE_SIZE);
+                  int j = 0;
+                  j++;
                }
             });
 

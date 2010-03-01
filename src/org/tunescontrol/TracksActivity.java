@@ -32,9 +32,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
@@ -42,150 +45,214 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class TracksActivity extends ListActivity {
 
-   public final static String TAG = TracksActivity.class.toString();
-   protected BackendService backend;
-   protected Session session;
-   protected Library library;
-   protected TracksAdapter adapter;
-   protected String albumid;
+	public final static String TAG = TracksActivity.class.toString();
+	protected BackendService backend;
+	protected Session session;
+	protected Library library;
+	protected TracksAdapter adapter;
+	protected String albumid;
+	protected boolean allAlbums;
+	protected String artist;
 
-   public ServiceConnection connection = new ServiceConnection() {
-      public void onServiceConnected(ComponentName className, IBinder service) {
-         backend = ((BackendService.BackendBinder) service).getService();
-         session = backend.getSession();
+	public ServiceConnection connection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			backend = ((BackendService.BackendBinder) service).getService();
+			session = backend.getSession();
 
-         if (session == null)
-            return;
+			if (session == null)
+				return;
 
-         adapter.results.clear();
+			adapter.results.clear();
 
-         // begin search now that we have a backend
-         library = new Library(session);
-         library.readTracks(albumid, adapter);
-      }
+			// begin search now that we have a backend
+			library = new Library(session);
+			if(!allAlbums)
+				library.readTracks(albumid, adapter);
+			else
+				library.readAllTracks(artist, adapter);
+		}
 
-      public void onServiceDisconnected(ComponentName className) {
-         backend = null;
-         session = null;
+		public void onServiceDisconnected(ComponentName className) {
+			backend = null;
+			session = null;
 
-      }
-   };
+		}
+	};
 
-   public Handler resultsUpdated = new Handler() {
-      @Override
-      public void handleMessage(Message msg) {
-         adapter.notifyDataSetChanged();
-      }
-   };
+	public Handler resultsUpdated = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			adapter.notifyDataSetChanged();
+		}
+	};
 
-   @Override
-   public void onStart() {
-      super.onStart();
-      this.bindService(new Intent(this, BackendService.class), connection, Context.BIND_AUTO_CREATE);
+	@Override
+	public void onStart() {
+		super.onStart();
+		this.bindService(new Intent(this, BackendService.class), connection, Context.BIND_AUTO_CREATE);
 
-   }
+	}
 
-   @Override
-   public void onStop() {
-      super.onStop();
-      this.unbindService(connection);
+	@Override
+	public void onStop() {
+		super.onStop();
+		this.unbindService(connection);
 
-   }
+	}
 
-   @Override
-   public void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      setContentView(R.layout.gen_list);
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.gen_list);
 
-      ((TextView) this.findViewById(android.R.id.empty)).setText(R.string.tracks_empty);
+		((TextView) this.findViewById(android.R.id.empty)).setText(R.string.tracks_empty);
 
-      // show tracklist for specified album
-      // set out list adapter to albums found
+		// show tracklist for specified album
+		// set out list adapter to albums found
 
-      this.albumid = this.getIntent().getStringExtra(Intent.EXTRA_TITLE);
-      // this.albumid = "11588692627249261480";
+		this.albumid = this.getIntent().getStringExtra(Intent.EXTRA_TITLE);
+		this.allAlbums = this.getIntent().getBooleanExtra("AllAlbums", false);
+		this.artist = this.getIntent().getStringExtra("Artist");
+		// this.albumid = "11588692627249261480";
 
-      this.getListView().setOnItemClickListener(new OnItemClickListener() {
-         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-            // assuming track order, begin playing this track
-            if (session != null)
-               session.controlPlayAlbum(albumid, position);
+		this.registerForContextMenu(this.getListView());
 
-         }
-      });
+		this.getListView().setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-      this.adapter = new TracksAdapter(this);
-      this.setListAdapter(adapter);
+				// assuming track order, begin playing this track
+				if (session != null)
+					session.controlPlayAlbum(albumid, position);
 
-   }
+			}
+		});
 
-   public class TracksAdapter extends BaseAdapter implements TagListener {
+		this.adapter = new TracksAdapter(this);
+		this.setListAdapter(adapter);
 
-      protected Context context;
-      protected LayoutInflater inflater;
+	}   
 
-      protected List<Response> results = new LinkedList<Response>();
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 
-      public TracksAdapter(Context context) {
-         this.context = context;
-         this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 
-      }
+		try {
+			// create context menu to play entire artist
+			final Response resp = (Response) adapter.getItem(info.position);
+			menu.setHeaderTitle(resp.getString("minm"));
+			final String trackid = resp.getNumberString("miid");
 
-      public void foundTag(String tag, Response resp) {
-         // add a found search result to our list
-         if (resp.containsKey("minm"))
-            results.add(resp);
-         this.searchDone();
-      }
+			if(TracksActivity.this.allAlbums)
+			{
+				MenuItem play = menu.add(R.string.artists_menu_play);
+				play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlPlayArtist(artist);
+						return true;
+					}
+				});         
 
-      public void searchDone() {
-         resultsUpdated.removeMessages(-1);
-         resultsUpdated.sendEmptyMessage(-1);
-      }
+				MenuItem queue = menu.add(R.string.artists_menu_queue);
+				queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlQueueArtist(artist);
+						return true;
+					}
+				});
+			}
+			else
+			{
+				final MenuItem play = menu.add(R.string.tracks_menu_play);
+				play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlPlayAlbum(albumid, info.position);
+						return true;
+					}
+				});
 
-      public Object getItem(int position) {
-         return results.get(position);
-      }
+				final MenuItem queue = menu.add(R.string.tracks_menu_queue);
+				queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlQueueTrack(trackid);
+						return true;
+					}
+				});
+			}
 
-      public boolean hasStableIds() {
-         return true;
-      }
+		} catch (Exception e) {
+			Log.w(TAG, "onCreateContextMenu:" + e.getMessage());
+		}
 
-      public int getCount() {
-         return results.size();
-      }
+	}
 
-      public long getItemId(int position) {
-         return position;
-      }
+	public class TracksAdapter extends BaseAdapter implements TagListener {
 
-      protected SimpleDateFormat format = new SimpleDateFormat("m:ss");
-      protected Date date = new Date(0);
+		protected Context context;
+		protected LayoutInflater inflater;
 
-      public View getView(int position, View convertView, ViewGroup parent) {
+		protected List<Response> results = new LinkedList<Response>();
 
-         if (convertView == null)
-            convertView = inflater.inflate(R.layout.item_track, parent, false);
+		public TracksAdapter(Context context) {
+			this.context = context;
+			this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-         try {
+		}
 
-            // otherwise show normal search result
-            Response resp = (Response) this.getItem(position);
+		public void foundTag(String tag, Response resp) {
+			// add a found search result to our list
+			if (resp.containsKey("minm"))
+				results.add(resp);
+			this.searchDone();
+		}
 
-            String title = resp.getString("minm");
-            date.setTime(resp.getNumberLong("astm"));
-            String length = format.format(date);
+		public void searchDone() {
+			resultsUpdated.removeMessages(-1);
+			resultsUpdated.sendEmptyMessage(-1);
+		}
 
-            ((TextView) convertView.findViewById(android.R.id.text1)).setText(title);
-            ((TextView) convertView.findViewById(android.R.id.text2)).setText(length);
+		public Object getItem(int position) {
+			return results.get(position);
+		}
 
-         } catch (Exception e) {
-            Log.d(TAG, String.format("onCreate Error: %s", e.getMessage()));
-         }
+		public boolean hasStableIds() {
+			return true;
+		}
 
-         /*
+		public int getCount() {
+			return results.size();
+		}
+
+		public long getItemId(int position) {
+			return position;
+		}
+
+		protected SimpleDateFormat format = new SimpleDateFormat("m:ss");
+		protected Date date = new Date(0);
+
+		public View getView(int position, View convertView, ViewGroup parent) {
+
+			if (convertView == null)
+				convertView = inflater.inflate(R.layout.item_track, parent, false);
+
+			try {
+
+				// otherwise show normal search result
+				Response resp = (Response) this.getItem(position);
+
+				String title = resp.getString("minm");
+				date.setTime(resp.getNumberLong("astm"));
+				String length = format.format(date);
+
+				((TextView) convertView.findViewById(android.R.id.text1)).setText(title);
+				((TextView) convertView.findViewById(android.R.id.text2)).setText(length);
+
+			} catch (Exception e) {
+				Log.d(TAG, String.format("onCreate Error: %s", e.getMessage()));
+			}
+
+			/*
                 mlit  --+
                         mikd   1      02 == 2
                         asal   12     Dance or Die
@@ -195,12 +262,12 @@ public class TracksActivity extends ListActivity {
                         miid   4      0000005b == 91
                         minm   12     dance or die
 
-          */
+			 */
 
-         return convertView;
+			return convertView;
 
-      }
+		}
 
-   }
+	}
 
 }

@@ -150,7 +150,15 @@ public class ArtistsActivity extends ListActivity {
                session.controlPlayArtist(artist);
                return true;
             }
-         });
+         });         
+         
+         MenuItem queue = menu.add(R.string.artists_menu_queue);
+         queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+             public boolean onMenuItemClick(MenuItem item) {
+                session.controlQueueArtist(artist);
+                return true;
+             }
+          });
 
          MenuItem browse = menu.add(R.string.artists_menu_browse);
          browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {

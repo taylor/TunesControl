@@ -69,7 +69,7 @@ public class BackendService extends Service {
       // this should be replaced with a MUCH more secure guid generation method
       // along with backend db for guid storage
       // this was mostly kept around to make debugging easier
-      // this.session = new Session(ip, "0000000000000001");
+      // this.session = new Session(address, "0000000000000001");
 
       // try looking up code in database if null
       if (code == null) {
@@ -90,12 +90,13 @@ public class BackendService extends Service {
       // if we have a library, we should make sure that its stored in our db
       // create a new entry, otherwise just update the ip address
       if (library != null) {
-         if (!pairdb.libraryExists(library)) {
+         //if (!pairdb.libraryExists(library)) {
             pairdb.insertCode(address, library, code);
-         } else {
+         //} else {
             pairdb.updateAddress(library, address);
-         }
+         //}
       }
+      
 
       // save this ip address to help us start faster
       Editor edit = prefs.edit();

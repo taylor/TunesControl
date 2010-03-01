@@ -201,6 +201,19 @@ public class Session {
       });
 
    }
+   
+   public void controlQueueAlbum(final String albumid) {
+
+
+	      ThreadExecutor.runTask(new Runnable() {
+	         public void run() {
+	            RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=add&query='daap.songalbumid:%s'&session-id=%s", getRequestBase(), albumid, sessionId));
+
+	            notifyStatus();
+	         }
+	      });
+
+	   }
 
    public void controlPlayArtist(String artist) {
 
@@ -220,6 +233,30 @@ public class Session {
       });
 
    }
+   
+   public void controlQueueArtist(String artist) {
+
+	      final String encodedArtist = URLEncoder.encode(artist).replaceAll("\\+", "%20");
+
+	      ThreadExecutor.runTask(new Runnable() {
+	         public void run() {
+	            RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=add&query='daap.songartist:%s'&session-id=%s", getRequestBase(), encodedArtist, sessionId));
+	            notifyStatus();
+	         }
+	      });
+
+	   }
+   
+   public void controlQueueTrack(final String track) {
+
+	      ThreadExecutor.runTask(new Runnable() {
+	         public void run() {
+	            RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=add&query='dmap.itemid:%s'&session-id=%s", getRequestBase(), track, sessionId));
+	            notifyStatus();
+	         }
+	      });
+
+	   }
 
    public void controlPlaySearch(final String search, final int index) {
       // /ctrl-int/1/cue?command=play&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:4','com.apple.itunes.mediakind:8')+'dmap.itemname:*F*')&index=4&sort=name&session-id=1550976127
@@ -231,7 +268,7 @@ public class Session {
          public void run() {
             RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=clear&session-id=%s", getRequestBase(), sessionId));
             RequestHelper.attemptRequest(String.format(
-                     "%s/ctrl-int/1/cue?command=play&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:4','com.apple.itunes.mediakind:8')+('dmap.itemname:*%s*','daap.songartist:*%s*','daap.songalbum:*%s*'))&type=music&sort=name&index=%d&session-id=%s", getRequestBase(),
+                     "%s/ctrl-int/1/cue?command=play&query=('dmap.itemname:*%s*','daap.songartist:*%s*','daap.songalbum:*%s*')&type=music&sort=artist&index=%d&session-id=%s", getRequestBase(),
                      encodedSearch, encodedSearch, encodedSearch, index, sessionId));
             notifyStatus();
          }

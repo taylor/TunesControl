@@ -85,4 +85,11 @@
 	<string name="pref_fadeupnew">fadeupnew</string>
 	<string name="pref_vibrate">vibrate</string>
 
+<string name="artists_menu_queue">Queue Artist</string>
+<string name="albums_menu_queue">Queue Album</string>
+<string name="tracks_menu_play">Play Track</string>
+<string name="tracks_menu_queue">Queue Track</string>
+<string name="search_menu_play_found">Play found Tracks</string>
+<string name="search_menu_open_album">Open Album</string>
+<string name="search_menu_open_artist">Open Artist</string>
 </resources>

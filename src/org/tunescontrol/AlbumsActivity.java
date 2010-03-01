@@ -53,264 +53,304 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class AlbumsActivity extends ListActivity {
 
-   public final static String TAG = AlbumsActivity.class.toString();
+	public final static String TAG = AlbumsActivity.class.toString();
 
-   protected BackendService backend;
-   protected Session session;
-   protected Library library;
-   protected ListView list;
-   protected AlbumsAdapter adapter;
-   protected String artist;
-   protected Bitmap blank;
+	protected BackendService backend;
+	protected Session session;
+	protected Library library;
+	protected ListView list;
+	protected AlbumsAdapter adapter;
+	protected String artist;
+	protected Bitmap blank;
 
-   public ServiceConnection connection = new ServiceConnection() {
-      public void onServiceConnected(ComponentName className, IBinder service) {
-         backend = ((BackendService.BackendBinder) service).getService();
-         session = backend.getSession();
+	public ServiceConnection connection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			backend = ((BackendService.BackendBinder) service).getService();
+			session = backend.getSession();
 
-         if (session == null)
-            return;
+			if (session == null)
+				return;
 
-         adapter.results.clear();
+			adapter.results.clear();
 
-         // begin search now that we have a backend
-         library = new Library(session);
-         ThreadExecutor.runTask(new Runnable() {
-            public void run() {
-               library.readAlbums(adapter, artist);
-            }
-         });
+			// begin search now that we have a backend
+			library = new Library(session);
+			ThreadExecutor.runTask(new Runnable() {
+				public void run() {
+					library.readAlbums(adapter, artist);
+				}
+			});
 
-      }
+		}
 
-      public void onServiceDisconnected(ComponentName className) {
-         backend = null;
-         session = null;
+		public void onServiceDisconnected(ComponentName className) {
+			backend = null;
+			session = null;
 
-      }
-   };
+		}
+	};
 
-   public Handler resultsUpdated = new Handler() {
-      @Override
-      public void handleMessage(Message msg) {
-         adapter.notifyDataSetChanged();
-      }
-   };
+	public Handler resultsUpdated = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			adapter.notifyDataSetChanged();
+		}
+	};
 
-   @Override
-   public void onStart() {
-      super.onStart();
-      this.bindService(new Intent(this, BackendService.class), connection, Context.BIND_AUTO_CREATE);
+	@Override
+	public void onStart() {
+		super.onStart();
+		this.bindService(new Intent(this, BackendService.class), connection, Context.BIND_AUTO_CREATE);
 
-   }
+	}
 
-   @Override
-   public void onStop() {
-      super.onStop();
-      this.unbindService(connection);
+	@Override
+	public void onStop() {
+		super.onStop();
+		this.unbindService(connection);
 
-   }
+	}
 
-   @Override
-   public void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      setContentView(R.layout.gen_list);
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.gen_list);
 
-      ((TextView) this.findViewById(android.R.id.empty)).setText(R.string.albums_empty);
+		((TextView) this.findViewById(android.R.id.empty)).setText(R.string.albums_empty);
 
-      this.artist = this.getIntent().getStringExtra(Intent.EXTRA_TITLE);
-      this.list = this.getListView();
-      this.adapter = new AlbumsAdapter(this);
-      this.setListAdapter(adapter);
+		this.artist = this.getIntent().getStringExtra(Intent.EXTRA_TITLE);
+		this.list = this.getListView();
+		this.adapter = new AlbumsAdapter(this);
+		this.setListAdapter(adapter);
 
-      this.registerForContextMenu(this.getListView());
+		this.registerForContextMenu(this.getListView());
 
-      this.getListView().setOnItemClickListener(new OnItemClickListener() {
-         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            try {
-               // launch activity to browse track details for this albums
-               final Response resp = (Response) adapter.getItem(position);
-               final String albumid = resp.getNumberString("mper");
+		this.getListView().setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				try {
+					// launch activity to browse track details for this albums
+					if(position == 0)
+					{
+						Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
+						intent.putExtra(Intent.EXTRA_TITLE, "");
+						intent.putExtra("Artist", AlbumsActivity.this.artist);
+						intent.putExtra("AllAlbums", true);
+						AlbumsActivity.this.startActivity(intent);
+					}
+					else
+					{
+						final Response resp = (Response) adapter.getItem(position);
+						final String albumid = resp.getNumberString("mper");
 
-               Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
-               intent.putExtra(Intent.EXTRA_TITLE, albumid);
-               AlbumsActivity.this.startActivity(intent);
-            } catch (Exception e) {
-               Log.w(TAG, "onCreate:" + e.getMessage());
-            }
+						Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
+						intent.putExtra(Intent.EXTRA_TITLE, albumid);
+						intent.putExtra("Artist", AlbumsActivity.this.artist);
+						intent.putExtra("AllAlbums", false);
+						AlbumsActivity.this.startActivity(intent);
+					}
+				} catch (Exception e) {
+					Log.w(TAG, "onCreate:" + e.getMessage());
+				}
 
-         }
-      });
+			}
+		});
 
-   }
+	}
 
-   @Override
-   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 
-      final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+		final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 
-      try {
-         // create context menu to play entire artist
-         final Response resp = (Response) adapter.getItem(info.position);
-         menu.setHeaderTitle(resp.getString("minm"));
-         final String albumid = resp.getNumberString("mper");
+		try {
+			if(info.position > 0)
+			{
+				// create context menu to play entire artist
+				final Response resp = (Response) adapter.getItem(info.position);
+				menu.setHeaderTitle(resp.getString("minm"));
+				final String albumid = resp.getNumberString("mper");
 
-         final MenuItem play = menu.add(R.string.albums_menu_play);
-         play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-            public boolean onMenuItemClick(MenuItem item) {
-               session.controlPlayAlbum(albumid, 0);
-               return true;
-            }
-         });
+				final MenuItem play = menu.add(R.string.albums_menu_play);
+				play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlPlayAlbum(albumid, 0);
+						return true;
+					}
+				});
 
-         final MenuItem browse = menu.add(R.string.albums_menu_browse);
-         browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
-            public boolean onMenuItemClick(MenuItem item) {
-               Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
-               intent.putExtra(Intent.EXTRA_TITLE, albumid);
-               AlbumsActivity.this.startActivity(intent);
+				final MenuItem queue = menu.add(R.string.albums_menu_queue);
+				queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlQueueAlbum(albumid);
+						return true;
+					}
+				});
 
-               return true;
-            }
-         });
-      } catch (Exception e) {
-         Log.w(TAG, "onCreateContextMenu:" + e.getMessage());
-      }
+				final MenuItem browse = menu.add(R.string.albums_menu_browse);
+				browse.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						Intent intent = new Intent(AlbumsActivity.this, TracksActivity.class);
+						intent.putExtra(Intent.EXTRA_TITLE, albumid);
+						intent.putExtra("Artist", AlbumsActivity.this.artist);
+						intent.putExtra("AllAlbums", false);
+						AlbumsActivity.this.startActivity(intent);
 
-   }
+						return true;
+					}
 
-   public class AlbumsAdapter extends BaseAdapter implements TagListener {
+				});
+			}
+		} catch (Exception e) {
+			Log.w(TAG, "onCreateContextMenu:" + e.getMessage());
+		}
 
-      protected Context context;
-      protected LayoutInflater inflater;
-      protected final List<Response> results = new LinkedList<Response>();
+	}
 
-      public AlbumsAdapter(Context context) {
-         this.context = context;
-         this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	public class AlbumsAdapter extends BaseAdapter implements TagListener {
 
-      }
+		protected Context context;
+		protected LayoutInflater inflater;
+		protected final List<Response> results = new LinkedList<Response>();
 
-      public void foundTag(String tag, Response resp) {
-         // add a found search result to our list
-         if (resp.containsKey("minm"))
-            results.add(resp);
-      }
+		public AlbumsAdapter(Context context) {
+			this.context = context;
+			this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-      public void searchDone() {
-         resultsUpdated.removeMessages(-1);
-         resultsUpdated.sendEmptyMessage(-1);
-      }
+		}
 
-      public Object getItem(int position) {
-         return results.get(position);
-      }
+		public void foundTag(String tag, Response resp) {
+			// add a found search result to our list
+			if (resp.containsKey("minm"))
+				results.add(resp);
+		}
 
-      public boolean hasStableIds() {
-         return true;
-      }
+		public void searchDone() {
+			resultsUpdated.removeMessages(-1);
+			resultsUpdated.sendEmptyMessage(-1);
+		}
 
-      public int getCount() {
-         return results.size();
-      }
+		public Object getItem(int position) {
+			if(position == 0)
+				return null;
+			else
+				return results.get(position - 1);
+		}
 
-      public long getItemId(int position) {
-         return position;
-      }
+		public boolean hasStableIds() {
+			return true;
+		}
 
-      public View getView(int position, View convertView, ViewGroup parent) {
+		public int getCount() {
+			return results.size() + 1;
+		}
 
-         if (convertView == null)
-            convertView = this.inflater.inflate(R.layout.item_album, parent, false);
+		public long getItemId(int position) {
+			return position;
+		}
 
-         try {
-            Response child = (Response) this.getItem(position);
-            String title = child.getString("minm");
-            String caption = AlbumsActivity.this.getResources().getString(R.string.albums_album_caption, child.getNumberLong("mimc"));
+		public View getView(int position, View convertView, ViewGroup parent) {
 
-            ((TextView) convertView.findViewById(android.R.id.text1)).setText(title);
-            ((TextView) convertView.findViewById(android.R.id.text2)).setText(caption);
 
-            // go load image art
-            ((ImageView) convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
-            new LoadPhotoTask().execute(Integer.valueOf(position), Integer.valueOf((int)child.getNumberLong("miid")));
-         } catch (Exception e) {
-            Log.w(TAG, "getView:" + e.getMessage());
-         }
 
-         return convertView;
+			try {
+				if(position == 0)
+				{
+		            //if (convertView == null)
+		                convertView = inflater.inflate(R.layout.item_artist, parent, false);
+					((TextView) convertView.findViewById(android.R.id.text1)).setText("All");
+				}
+				else
+				{
+					//if (convertView == null)
+						convertView = this.inflater.inflate(R.layout.item_album, parent, false);
+					Response child = (Response) this.getItem(position);
+					String title = child.getString("minm");
+					String caption = AlbumsActivity.this.getResources().getString(R.string.albums_album_caption, child.getNumberLong("mimc"));
 
-      }
+					((TextView) convertView.findViewById(android.R.id.text1)).setText(title);
+					((TextView) convertView.findViewById(android.R.id.text2)).setText(caption);
 
-   }
+					// go load image art
+					((ImageView) convertView.findViewById(android.R.id.icon)).setImageBitmap(blank);
+					new LoadPhotoTask().execute(Integer.valueOf(position), Integer.valueOf((int)child.getNumberLong("miid")));
+				}
+			} catch (Exception e) {
+				Log.w(TAG, "getView:" + e.getMessage());
+			}
 
-   protected Map<Integer, SoftReference<Bitmap>> memcache = new HashMap<Integer, SoftReference<Bitmap>>();
+			return convertView;
 
-   private class LoadPhotoTask extends UserTask<Object, Void, Object[]> {
-      public Object[] doInBackground(Object... params) {
+		}
 
-         Integer position = (Integer) params[0];
-         Integer itemid = (Integer) params[1];
+	}
 
-         Bitmap bitmap = null;
-         try {
+	protected Map<Integer, SoftReference<Bitmap>> memcache = new HashMap<Integer, SoftReference<Bitmap>>();
 
-            // first check if we have an in-memory cache of this bitmap
-            if (memcache.containsKey(itemid)) {
-               bitmap = memcache.get(itemid).get();
-            }
+	private class LoadPhotoTask extends UserTask<Object, Void, Object[]> {
+		public Object[] doInBackground(Object... params) {
 
-            if (bitmap != null) {
-               Log.d(TAG, String.format("MEMORY cache hit for %s", itemid.toString()));
-            } else {
+			Integer position = (Integer) params[0];
+			Integer itemid = (Integer) params[1];
 
-               // fetch the album cover from itunes
-               byte[] raw = RequestHelper.request(String.format("%s/databases/%d/groups/%d/extra_data/artwork?session-id=%s&mw=55&mh=55&group-type=albums",
-                     session.getRequestBase(), session.databaseId, itemid, session.sessionId), false);
-               bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-              
-               // if SOMEHOW (404, etc) this image was still null, then save as blank
-               if (bitmap == null)
-                  bitmap = blank;
+			Bitmap bitmap = null;
+			try {
 
-               // try removing any stale references
-               memcache.remove(itemid);
-               memcache.put(itemid, new SoftReference<Bitmap>(bitmap));
-            }
-         } catch (Exception e) {
-            Log.w(TAG, "LoadPhotoTask:" + e.getMessage());
-         }
+				// first check if we have an in-memory cache of this bitmap
+				if (memcache.containsKey(itemid)) {
+					bitmap = memcache.get(itemid).get();
+				}
 
-         return new Object[] { position, bitmap };
-      }
+				if (bitmap != null) {
+					Log.d(TAG, String.format("MEMORY cache hit for %s", itemid.toString()));
+				} else {
 
-      @Override
-      public void end(Object[] result) {
+					// fetch the album cover from itunes
+					byte[] raw = RequestHelper.request(String.format("%s/databases/%d/groups/%d/extra_data/artwork?session-id=%s&mw=55&mh=55&group-type=albums",
+							session.getRequestBase(), session.databaseId, itemid, session.sessionId), false);
+					bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
 
-         // update gui to show the newly-fetched albumart
-         int position = ((Integer) result[0]).intValue();
-         Bitmap bitmap = (Bitmap) result[1];
+					// if SOMEHOW (404, etc) this image was still null, then save as blank
+					if (bitmap == null)
+						bitmap = blank;
 
-         // skip if bitmap wasnt found
-         if (bitmap == null)
-            return;
+					// try removing any stale references
+					memcache.remove(itemid);
+					memcache.put(itemid, new SoftReference<Bitmap>(bitmap));
+				}
+			} catch (Exception e) {
+				Log.w(TAG, "LoadPhotoTask:" + e.getMessage());
+			}
 
-         try {
-            // skip updating this item if outside of bounds
-            if (position < list.getFirstVisiblePosition() || position > list.getLastVisiblePosition())
-               return;
+			return new Object[] { position, bitmap };
+		}
 
-            // find actual position and update view
-            int visible = position - list.getFirstVisiblePosition();
-            View view = list.getChildAt(visible);
-            ((ImageView) view.findViewById(android.R.id.icon)).setImageBitmap(bitmap);
+		@Override
+		public void end(Object[] result) {
 
-         } catch (Exception e) {
-            // we probably ran into an item thats now collapsed, just ignore
-            Log.d(TAG, "end:" + e.getMessage());
-         }
+			// update gui to show the newly-fetched albumart
+			int position = ((Integer) result[0]).intValue();
+			Bitmap bitmap = (Bitmap) result[1];
 
-      }
-   }
+			// skip if bitmap wasnt found
+			if (bitmap == null)
+				return;
+
+			try {
+				// skip updating this item if outside of bounds
+				if (position < list.getFirstVisiblePosition() || position > list.getLastVisiblePosition())
+					return;
+
+				// find actual position and update view
+				int visible = position - list.getFirstVisiblePosition();
+				View view = list.getChildAt(visible);
+				((ImageView) view.findViewById(android.R.id.icon)).setImageBitmap(bitmap);
+
+			} catch (Exception e) {
+				// we probably ran into an item thats now collapsed, just ignore
+				Log.d(TAG, "end:" + e.getMessage());
+			}
+
+		}
+	}
 
 }
