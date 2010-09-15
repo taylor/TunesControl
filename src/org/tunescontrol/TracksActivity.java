@@ -22,7 +22,6 @@ import org.tunescontrol.daap.Response;
 import org.tunescontrol.daap.Session;
 import org.tunescontrol.daap.ResponseParser.TagListener;
 
-import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -43,7 +42,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class TracksActivity extends ListActivity {
+public class TracksActivity extends BaseBrowseActivity {
 
 	public final static String TAG = TracksActivity.class.toString();
 	protected BackendService backend;
@@ -53,6 +52,7 @@ public class TracksActivity extends ListActivity {
 	protected String albumid;
 	protected boolean allAlbums;
 	protected String artist;
+	protected String playlistId, playlistPersistentId;
 
 	public ServiceConnection connection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -66,10 +66,12 @@ public class TracksActivity extends ListActivity {
 
 			// begin search now that we have a backend
 			library = new Library(session);
-			if(!allAlbums)
-				library.readTracks(albumid, adapter);
-			else
+			if (playlistId != null)
+				library.readPlaylist(playlistId, adapter);
+			else if(allAlbums)
 				library.readAllTracks(artist, adapter);
+			else
+				library.readTracks(albumid, adapter);
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
@@ -113,6 +115,8 @@ public class TracksActivity extends ListActivity {
 		this.albumid = this.getIntent().getStringExtra(Intent.EXTRA_TITLE);
 		this.allAlbums = this.getIntent().getBooleanExtra("AllAlbums", false);
 		this.artist = this.getIntent().getStringExtra("Artist");
+		this.playlistId = this.getIntent().getStringExtra("Playlist");
+		this.playlistPersistentId = this.getIntent().getStringExtra("PlaylistPersistentId");
 		// this.albumid = "11588692627249261480";
 
 
@@ -121,10 +125,35 @@ public class TracksActivity extends ListActivity {
 		this.getListView().setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-				// assuming track order, begin playing this track
-				if (session != null)
-					session.controlPlayAlbum(albumid, position);
-
+				try
+				{
+					// assuming track order, begin playing this track
+					if (session != null)
+					{
+						if (TracksActivity.this.playlistId != null)
+						{
+							Response resp = (Response) adapter.getItem(position);
+							String containerItemId = resp.getNumberHex("mcti");
+							session.controlPlayPlaylist(TracksActivity.this.playlistPersistentId,containerItemId);
+							TracksActivity.this.setResult(RESULT_OK,new Intent());
+							TracksActivity.this.finish();
+						}
+						else if(TracksActivity.this.allAlbums)
+						{
+							session.controlPlayArtist(artist,position);
+							TracksActivity.this.setResult(RESULT_OK,new Intent());
+							TracksActivity.this.finish();
+						}
+						else
+						{
+							session.controlPlayAlbum(albumid, position);
+							TracksActivity.this.setResult(RESULT_OK,new Intent());
+							TracksActivity.this.finish();
+						}
+					}
+				} catch (Exception e) {
+					Log.w(TAG, "onItemClick:" + e.getMessage());
+				}
 			}
 		});
 
@@ -143,13 +172,36 @@ public class TracksActivity extends ListActivity {
 			final Response resp = (Response) adapter.getItem(info.position);
 			menu.setHeaderTitle(resp.getString("minm"));
 			final String trackid = resp.getNumberString("miid");
+			final String containerItemId = resp.getNumberHex("mcti");
+			if (TracksActivity.this.playlistId != null)
+			{
+				MenuItem play = menu.add(R.string.playlists_menu_play);
+				play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					public boolean onMenuItemClick(MenuItem item) {
+						session.controlPlayPlaylist(TracksActivity.this.playlistPersistentId, containerItemId);
+						TracksActivity.this.setResult(RESULT_OK,new Intent());
+						TracksActivity.this.finish();
+						return true;
+					}
+				});         
 
-			if(TracksActivity.this.allAlbums)
+//				MenuItem queue = menu.add(R.string.artists_menu_queue);
+//				queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+//					public boolean onMenuItemClick(MenuItem item) {
+//						session.controlQueuePlaylist(TracksActivity.this.playlistPersistentId);
+//						return true;
+//					}
+//				});
+				
+			}
+			else if(TracksActivity.this.allAlbums)
 			{
 				MenuItem play = menu.add(R.string.artists_menu_play);
 				play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 					public boolean onMenuItemClick(MenuItem item) {
-						session.controlPlayArtist(artist);
+						session.controlPlayArtist(artist,0);
+						TracksActivity.this.setResult(RESULT_OK,new Intent());
+						TracksActivity.this.finish();
 						return true;
 					}
 				});         
@@ -158,6 +210,8 @@ public class TracksActivity extends ListActivity {
 				queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 					public boolean onMenuItemClick(MenuItem item) {
 						session.controlQueueArtist(artist);
+						TracksActivity.this.setResult(RESULT_OK,new Intent());
+						TracksActivity.this.finish();
 						return true;
 					}
 				});
@@ -168,6 +222,8 @@ public class TracksActivity extends ListActivity {
 				play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 					public boolean onMenuItemClick(MenuItem item) {
 						session.controlPlayAlbum(albumid, info.position);
+						TracksActivity.this.setResult(RESULT_OK,new Intent());
+						TracksActivity.this.finish();
 						return true;
 					}
 				});
@@ -176,6 +232,8 @@ public class TracksActivity extends ListActivity {
 				queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 					public boolean onMenuItemClick(MenuItem item) {
 						session.controlQueueTrack(trackid);
+						TracksActivity.this.setResult(RESULT_OK,new Intent());
+						TracksActivity.this.finish();
 						return true;
 					}
 				});

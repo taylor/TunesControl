@@ -14,8 +14,8 @@ package org.tunescontrol.daap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 
 import android.graphics.Bitmap;
@@ -86,7 +86,7 @@ public class RequestHelper {
       byte[] buffer = new byte[1024];
 
       URL url = new URL(remote);
-      URLConnection connection = url.openConnection();
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       connection.setRequestProperty("Viewer-Only-Client", "1");
       if (!keepalive) {
          connection.setConnectTimeout(10000);
@@ -94,6 +94,10 @@ public class RequestHelper {
       }
       connection.connect();
       InputStream is = null;
+      
+      if (connection.getResponseCode() >= 400)
+    	  throw new Exception("HTTP Error Response Code");
+      
       ByteArrayOutputStream os = new ByteArrayOutputStream();
       try {
          is = connection.getInputStream();

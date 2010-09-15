@@ -14,6 +14,7 @@ package org.tunescontrol;
 
 import java.io.IOException;
 import java.util.Hashtable;
+import java.util.Random;
 
 import javax.jmdns.ServiceInfo;
 
@@ -25,7 +26,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
 
 public class PairingActivity extends Activity {
@@ -68,24 +68,39 @@ public class PairingActivity extends Activity {
       // the pairing server will report to us when someone tries pairing
       pairingServer = new PairingServer(paired);
 
-      String deviceName = Settings.System.getString(this.getContentResolver(), android.os.Build.DEVICE);
-      if (deviceName == null) {
-         deviceName = "Device";
-      }
+      Random random = new Random();
+      int id = random.nextInt(100000);
       final Hashtable values = new Hashtable();
-      values.put("DvNm", "Android " + deviceName);
+      values.put("DvNm", "Android " + id);
       values.put("RemV", "10000");
       values.put("DvTy", "iPod");
       values.put("RemN", "Remote");
       values.put("txtvers", "1");
-      values.put("Pair", "0000000000000001");
+      byte[] pair = new byte[8];
+      random.nextBytes(pair);
+      values.put("Pair", toHex(pair));
 
       // NOTE: this "Pair" above is *not* the guid--we generate and return that
       // in PairingServer
 
-      pairservice = ServiceInfo.create(LibraryActivity.REMOTE_TYPE, "0000000000000000000000000000000000000006",
-               PairingServer.PORT, 0, 0, values);
+      byte[] name = new byte[20];
+      random.nextBytes(name);
+      pairservice = ServiceInfo.create(LibraryActivity.REMOTE_TYPE, toHex(name), PairingServer.PORT, 0, 0, values);
+   }
 
+   private static final char[] _nibbleToHex = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+            'e', 'f' };
+
+   private static String toHex(byte[] code) {
+      StringBuilder result = new StringBuilder(2 * code.length);
+
+      for (int i = 0; i < code.length; i++) {
+         int b = code[i] & 0xFF;
+         result.append(_nibbleToHex[b / 16]);
+         result.append(_nibbleToHex[b % 16]);
+      }
+
+      return result.toString();
    }
 
    @Override

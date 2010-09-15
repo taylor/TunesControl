@@ -26,7 +26,6 @@ import org.tunescontrol.daap.ResponseParser.TagListener;
 import org.tunescontrol.util.ThreadExecutor;
 import org.tunescontrol.util.UserTask;
 
-import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -51,7 +50,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class AlbumsActivity extends ListActivity {
+public class AlbumsActivity extends BaseBrowseActivity {
 
 	public final static String TAG = AlbumsActivity.class.toString();
 
@@ -135,7 +134,7 @@ public class AlbumsActivity extends ListActivity {
 						intent.putExtra(Intent.EXTRA_TITLE, "");
 						intent.putExtra("Artist", AlbumsActivity.this.artist);
 						intent.putExtra("AllAlbums", true);
-						AlbumsActivity.this.startActivity(intent);
+						AlbumsActivity.this.startActivityForResult(intent, 1);
 					}
 					else
 					{
@@ -146,7 +145,7 @@ public class AlbumsActivity extends ListActivity {
 						intent.putExtra(Intent.EXTRA_TITLE, albumid);
 						intent.putExtra("Artist", AlbumsActivity.this.artist);
 						intent.putExtra("AllAlbums", false);
-						AlbumsActivity.this.startActivity(intent);
+						AlbumsActivity.this.startActivityForResult(intent, 1);
 					}
 				} catch (Exception e) {
 					Log.w(TAG, "onCreate:" + e.getMessage());
@@ -174,6 +173,8 @@ public class AlbumsActivity extends ListActivity {
 				play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 					public boolean onMenuItemClick(MenuItem item) {
 						session.controlPlayAlbum(albumid, 0);
+						AlbumsActivity.this.setResult(RESULT_OK,new Intent());
+						AlbumsActivity.this.finish();
 						return true;
 					}
 				});
@@ -182,6 +183,8 @@ public class AlbumsActivity extends ListActivity {
 				queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
 					public boolean onMenuItemClick(MenuItem item) {
 						session.controlQueueAlbum(albumid);
+						AlbumsActivity.this.setResult(RESULT_OK,new Intent());
+						AlbumsActivity.this.finish();
 						return true;
 					}
 				});
@@ -193,7 +196,7 @@ public class AlbumsActivity extends ListActivity {
 						intent.putExtra(Intent.EXTRA_TITLE, albumid);
 						intent.putExtra("Artist", AlbumsActivity.this.artist);
 						intent.putExtra("AllAlbums", false);
-						AlbumsActivity.this.startActivity(intent);
+						AlbumsActivity.this.startActivityForResult(intent, 1);
 
 						return true;
 					}

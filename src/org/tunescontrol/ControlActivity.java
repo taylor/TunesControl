@@ -215,13 +215,14 @@ public class ControlActivity extends Activity implements ViewFactory {
             return;
 
          // launch tracks view for current album
-         Intent intent = new Intent(ControlActivity.this, TracksActivity.class);
-         intent.putExtra(Intent.EXTRA_TITLE, status.albumId);
+         Intent intent = new Intent(ControlActivity.this, NowPlayingActivity.class);
+         intent.putExtra(Intent.EXTRA_TITLE, "");
          ControlActivity.this.startActivity(intent);
 
       }
    };
 
+   
    protected TextView trackName, trackArtist, trackAlbum, seekPosition, seekRemain;
    protected SeekBar seekBar;
 
@@ -336,7 +337,8 @@ public class ControlActivity extends Activity implements ViewFactory {
       new UpdateHelper(this);
 
       setContentView(R.layout.act_control);
-
+      
+      
       // this.notifman =
       // (NotificationManager)this.getSystemService(Context.NOTIFICATION_SERVICE);
       // this.shouldPause =
@@ -346,6 +348,8 @@ public class ControlActivity extends Activity implements ViewFactory {
 
       // prepare volume toast view
       LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+      
+      
       this.volume = inflater.inflate(R.layout.toa_volume, null, false);
 
       this.volumeBar = (ProgressBar) this.volume.findViewById(R.id.volume);
@@ -356,22 +360,22 @@ public class ControlActivity extends Activity implements ViewFactory {
       this.volumeToast.setView(this.volume);
 
       // pull out interesting controls
-      this.trackName = (TextView) this.findViewById(R.id.info_title);
-      this.trackArtist = (TextView) this.findViewById(R.id.info_artist);
-      this.trackAlbum = (TextView) this.findViewById(R.id.info_album);
+      this.trackName = (TextView) findViewById(R.id.info_title);
+      this.trackArtist = (TextView) findViewById(R.id.info_artist);
+      this.trackAlbum = (TextView) findViewById(R.id.info_album);
 
-      this.cover = (ImageSwitcher) this.findViewById(R.id.cover);
+      this.cover = (ImageSwitcher) findViewById(R.id.cover);
       this.cover.setFactory(this);
       this.cover.setInAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_in));
       this.cover.setOutAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out));
 
-      this.seekBar = (SeekBar) this.findViewById(R.id.seek);
-      this.seekPosition = (TextView) this.findViewById(R.id.seek_position);
-      this.seekRemain = (TextView) this.findViewById(R.id.seek_remain);
+      this.seekBar = (SeekBar) findViewById(R.id.seek);
+      this.seekPosition = (TextView) findViewById(R.id.seek_position);
+      this.seekRemain = (TextView) findViewById(R.id.seek_remain);
 
-      this.controlPrev = (ImageButton) this.findViewById(R.id.control_prev);
-      this.controlPause = (ImageButton) this.findViewById(R.id.control_pause);
-      this.controlNext = (ImageButton) this.findViewById(R.id.control_next);
+      this.controlPrev = (ImageButton) findViewById(R.id.control_prev);
+      this.controlPause = (ImageButton) findViewById(R.id.control_pause);
+      this.controlNext = (ImageButton) findViewById(R.id.control_next);
 
       this.seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
          public void onProgressChanged(SeekBar seekBar, int progress, boolean fromTouch) {
@@ -415,7 +419,7 @@ public class ControlActivity extends Activity implements ViewFactory {
          }
       });
 
-      this.fadeview = (FadeView) this.findViewById(R.id.fadeview);
+      this.fadeview = (FadeView) findViewById(R.id.fadeview);
       this.fadeview.startFade();
 
       this.fadeview.doubleTapHandler = this.doubleTapHandler;
@@ -485,11 +489,15 @@ public class ControlActivity extends Activity implements ViewFactory {
 
       MenuItem artists = menu.add(R.string.control_menu_artists);
       artists.setIcon(R.drawable.ic_search_category_music_artist);
-      artists.setIntent(new Intent(ControlActivity.this, ArtistsActivity.class));
+      Intent artistIntent = new Intent(ControlActivity.this, BrowseActivity.class);
+      artistIntent.putExtra("windowType",BaseBrowseActivity.RESULT_SWITCH_TO_ARTISTS);
+      artists.setIntent(artistIntent);
 
       MenuItem playlists = menu.add("Playlists");
-      playlists.setEnabled(false);
       playlists.setIcon(R.drawable.ic_search_category_music_song);
+      Intent playlistIntent = new Intent(ControlActivity.this, BrowseActivity.class);
+      playlistIntent.putExtra("windowType",BaseBrowseActivity.RESULT_SWITCH_TO_PLAYLISTS);
+      playlists.setIntent(playlistIntent);
 
       this.repeat = menu.add("");
       this.repeat.setIcon(android.R.drawable.ic_menu_rotate);

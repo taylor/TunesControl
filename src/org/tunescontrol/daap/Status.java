@@ -74,7 +74,7 @@ public class Status {
 			while(true) {
 				// when in playing state, keep moving progress forward
 				while(playStatus == STATE_PLAYING) {
-					Log.d(TAG, "thread entering playing loop");
+					//Log.d(TAG, "thread entering playing loop");
 					if(destroyThread) return;
 					long anchor = System.currentTimeMillis();
 					try {
@@ -157,7 +157,7 @@ public class Status {
 		this.progress.interrupt();
 		this.progress.stop();
 		this.keepalive.interrupt();
-		this.keepalive.stop();
+		//this.keepalive.stop(); //This is depreceated
 	}
 	
 	public Status(Session session, Handler update) {

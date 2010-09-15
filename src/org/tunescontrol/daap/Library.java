@@ -15,7 +15,9 @@ package org.tunescontrol.daap;
 import java.net.URLEncoder;
 import java.util.regex.Pattern;
 
+import org.tunescontrol.PlaylistsActivity.PlaylistsAdapter;
 import org.tunescontrol.daap.ResponseParser.TagListener;
+import org.tunescontrol.daap.Session.Playlist;
 
 import android.util.Log;
 
@@ -41,8 +43,9 @@ public class Library {
 
 			// http://192.168.254.128:3689/databases/36/containers/113/items?session-id=1535976870&revision-number=61&meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum&type=music&sort=name&include-sort-headers=1&query='dmap.itemname:*sea*'&index=0-7
 			//byte[] raw = RequestHelper.requestSearch(session, search, (int) start, (int) (start + items));
+		     String encodedSearch = URLEncoder.encode(search).replaceAll("\\+", "%20");
 			byte[] raw = RequestHelper.request(String.format("%s/databases/%d/items?session-id=%s&meta=dmap.itemname,dmap.itemid,dmap.persistentid,daap.songartist,daap.songalbum,daap.songtime,daap.songtracknumber&type=music&sort=album&query=('dmap.itemname:*%s*','daap.songartist:*%s*','daap.songalbum:*%s*')", session.getRequestBase(),
-					session.databaseId, session.sessionId, search, search, search), false);
+					session.databaseId, session.sessionId, encodedSearch, encodedSearch, encodedSearch), false);
 			//hits = ResponseParser.performSearch(raw, listener, MLIT_PATTERN, true);
 			// parse list, passing off events in the process
 			Response resp = ResponseParser.performParse(raw, listener, MLIT_PATTERN);
@@ -190,4 +193,79 @@ public class Library {
 		}
 	}
 
+	public void readPlaylists(PlaylistsAdapter adapter)
+	{
+
+		for (Playlist ply : this.session.playlists)
+		{
+			adapter.foundPlaylist(ply);
+		}
+		
+		adapter.searchDone();
+	}
+	
+	public void readPlaylist(String playlistid, TagListener listener)
+	{
+		Log.d(TAG, " in readPlaylists");
+		try {
+			// http://192.168.254.128:3689/databases/36/containers/1234/items?session-id=2025037772&meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,dmap.containeritemid,com.apple.tunes.has-video
+			byte[] raw = RequestHelper.request(String.format("%s/databases/%d/containers/%s/items?session-id=%s&meta=dmap.itemname,dmap.itemid,daap.songartst,daap.songalbum,dmap.containeritemid,com.apple.tunes.has-video", session.getRequestBase(), session.databaseId,
+					playlistid, session.sessionId), false);
+			
+			// parse list, passing off events in the process
+			ResponseParser.performSearch(raw, listener, MLIT_PATTERN, false);
+
+		} catch (Exception e) {
+			Log.w(TAG, "readPlaylists Exception:" + e.getMessage());
+		}
+	}
+	
+
+	public void readNowPlaying(String albumid, TagListener listener) {
+
+		//Try Wilco (Alex W)'s nowplaying extension /ctrl-int/1/items
+		
+		try {
+			String temp = String.format("%s/ctrl-int/1/items?session-id=%s&meta=dmap.itemname,dmap.itemid,daap.songartist,daap.songalbum,daap.songalbum,daap.songtime,daap.songtracknumber&type=music&sort=album&query='daap.songalbumid:%s'", 
+					session.getRequestBase(), session.sessionId, albumid);
+
+			byte[] raw = RequestHelper.request(temp, false);
+
+			// parse list, passing off events in the process
+			ResponseParser.performSearch(raw, listener, MLIT_PATTERN, false);
+
+		} catch (Exception e) {
+			//Fall back to reading album
+			if (albumid != "")
+				readTracks(albumid,listener);
+			else
+				readCurrentSong(listener);
+		}
+
+	}
+	
+	public void readCurrentSong(TagListener listener) {
+		//reads the current playing song as a one-item playlist
+		try {
+			String temp = String.format("%s/ctrl-int/1/playstatusupdate?revision-number=1&session-id=%s", 
+				session.getRequestBase(), session.sessionId);
+
+			//Refactor response into one that looks like a normal items request and trigger listener
+			Response resp = RequestHelper.requestParsed(temp, false).getNested("cmst");
+			if (resp.containsKey("cann"))
+			{
+				Response new_item = new Response();
+				new_item.put("minm", resp.getString("cann"));
+				new_item.put("asal", resp.getString("canl"));
+				new_item.put("asar", resp.getString("cana"));
+				new_item.put("astm", resp.getString("cast"));
+				
+				listener.foundTag("mlit", new_item);
+			}
+			listener.searchDone();
+		} catch (Exception e) {
+			Log.w(TAG, "readCurrentSong Exception:" + e.getMessage());
+		}
+	}
+	
 }

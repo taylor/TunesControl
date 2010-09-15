@@ -21,7 +21,6 @@ import org.tunescontrol.daap.Response;
 import org.tunescontrol.daap.Session;
 import org.tunescontrol.daap.ResponseParser.TagListener;
 
-import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -43,7 +42,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class ArtistsActivity extends ListActivity {
+public class ArtistsActivity extends BaseBrowseActivity {
 
    public final static String TAG = ArtistsActivity.class.toString();
 
@@ -124,7 +123,7 @@ public class ArtistsActivity extends ListActivity {
 
                Intent intent = new Intent(ArtistsActivity.this, AlbumsActivity.class);
                intent.putExtra(Intent.EXTRA_TITLE, artist);
-               ArtistsActivity.this.startActivity(intent);
+               ArtistsActivity.this.startActivityForResult(intent, 1);
             } catch (Exception e) {
                Log.w(TAG, "onItemClick:" + e.getMessage());
             }
@@ -147,7 +146,9 @@ public class ArtistsActivity extends ListActivity {
          MenuItem play = menu.add(R.string.artists_menu_play);
          play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
             public boolean onMenuItemClick(MenuItem item) {
-               session.controlPlayArtist(artist);
+               session.controlPlayArtist(artist,0);
+               ArtistsActivity.this.setResult(RESULT_OK,new Intent());
+               ArtistsActivity.this.finish();
                return true;
             }
          });         
@@ -156,6 +157,8 @@ public class ArtistsActivity extends ListActivity {
          queue.setOnMenuItemClickListener(new OnMenuItemClickListener() {
              public boolean onMenuItemClick(MenuItem item) {
                 session.controlQueueArtist(artist);
+                ArtistsActivity.this.setResult(RESULT_OK,new Intent());
+                ArtistsActivity.this.finish();
                 return true;
              }
           });
@@ -165,7 +168,7 @@ public class ArtistsActivity extends ListActivity {
             public boolean onMenuItemClick(MenuItem item) {
                Intent intent = new Intent(ArtistsActivity.this, AlbumsActivity.class);
                intent.putExtra(Intent.EXTRA_TITLE, artist);
-               ArtistsActivity.this.startActivity(intent);
+               ArtistsActivity.this.startActivityForResult(intent, 1);
                return true;
             }
          });

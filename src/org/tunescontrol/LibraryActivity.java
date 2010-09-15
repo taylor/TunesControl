@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -60,6 +61,7 @@ public class LibraryActivity extends Activity implements ServiceListener {
    public final static String HOSTNAME = "meowbox4";
 
    private static JmDNS zeroConf = null;
+   private static MulticastLock mLock = null;
    private BackendService backend;
 
    public ServiceConnection connection = new ServiceConnection() {
@@ -97,6 +99,10 @@ public class LibraryActivity extends Activity implements ServiceListener {
       InetAddress addr = InetAddress.getByAddress(byteaddr);
 
       Log.d(TAG, String.format("found intaddr=%d, addr=%s", intaddr, addr.toString()));
+      //start multicast lock
+      mLock = wifi.createMulticastLock("TunesRemote lock");
+      mLock.setReferenceCounted(true);
+      mLock.acquire();
 
       zeroConf = JmDNS.create(addr, HOSTNAME);
       zeroConf.addServiceListener(TOUCH_ABLE_TYPE, this);
@@ -109,6 +115,9 @@ public class LibraryActivity extends Activity implements ServiceListener {
       zeroConf.removeServiceListener(DACP_TYPE, this);
       zeroConf.close();
       zeroConf = null;
+      
+      mLock.release();
+      mLock = null;
    }
    
    public static JmDNS getZeroConf() {

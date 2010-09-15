@@ -160,7 +160,8 @@ public class SearchActivity extends Activity {
             // launch off event to play this search result
             if (session != null)
                session.controlPlaySearch(query, position);
-
+            	setResult(RESULT_OK);
+            	finish();
             // launch view off on nice animation to show that we listened to
             // user
             // view.startAnimation(slide);
@@ -185,6 +186,8 @@ public class SearchActivity extends Activity {
          play.setOnMenuItemClickListener(new OnMenuItemClickListener() {
             public boolean onMenuItemClick(MenuItem item) {
                 session.controlPlaySearch(query, info.position);
+            	setResult(RESULT_OK);
+            	finish();
                return true;
             }
          });

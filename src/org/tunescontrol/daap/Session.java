@@ -28,8 +28,10 @@ public class Session {
    protected String host;
    public String sessionId;
    public long databaseId, musicId;
+   public String databasePersistentId;
    protected Status singleton = null;
    protected List<Status> listeners = new LinkedList<Status>();
+   public List<Playlist> playlists = new LinkedList<Playlist>();
 
    public Session(String host, String pairingGuid) throws Exception {
       // start a session with the itunes server
@@ -45,6 +47,7 @@ public class Session {
       // http://192.168.254.128:3689/databases?session-id=1301749047
       Response databases = RequestHelper.requestParsed(String.format("%s/databases?session-id=%s", this.getRequestBase(), this.sessionId), false);
       this.databaseId = databases.getNested("avdb").getNested("mlcl").getNested("mlit").getNumberLong("miid");
+      this.databasePersistentId = databases.getNested("avdb").getNested("mlcl").getNested("mlit").getNumberHex("mper");
       Log.d(TAG, String.format("found database-id=%s", this.databaseId));
 
       // fetch playlists to find the overall magic "Music" playlist
@@ -56,7 +59,18 @@ public class Session {
          String name = resp.getString("minm");
          if (name.equals("Music")) {
             this.musicId = resp.getNumberLong("miid");
-            break;
+         }
+         else
+         {
+        	 // get a list of playlists, filter out some non-music iTunes playlists
+        	 if (name.equals("Films") || name.equals("TV Programmes") || name.equals("iTunes U") || (resp.getNumberLong("abpl") == 1))
+        		 //Ignore
+        	 {}
+        	 else
+        	 {
+        		 Log.d(TAG, String.format("found playlist=%s", name));
+        		 this.playlists.add(new Playlist(resp.getNumberLong("miid"), name, resp.getNumberLong("mimc"), resp.getNumberHex("mper")));
+        	 }
          }
       }
       Log.d(TAG, String.format("found music-id=%s", this.musicId));
@@ -215,18 +229,19 @@ public class Session {
 
 	   }
 
-   public void controlPlayArtist(String artist) {
+   public void controlPlayArtist(String artist,int index) {
 
       // http://192.168.254.128:3689/ctrl-int/1/cue?command=clear&session-id=130883770
       // /ctrl-int/1/cue?command=play&query=(('com.apple.itunes.mediakind:1','com.apple.itunes.mediakind:32')+'daap.songartist:Family%20Force%205')&index=0&sort=album&session-id=130883770
       // /ctrl-int/1/cue?command=play&query='daap.songartist:%s'&index=0&sort=album&session-id=%s
 
       final String encodedArtist = URLEncoder.encode(artist).replaceAll("\\+", "%20");
-
+      final int encodedIndex = index;
+      
       ThreadExecutor.runTask(new Runnable() {
          public void run() {
             RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=clear&session-id=%s", getRequestBase(), sessionId));
-            RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=play&query='daap.songartist:%s'&index=0&sort=album&session-id=%s", getRequestBase(), encodedArtist, sessionId));
+            RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=play&query='daap.songartist:%s'&index=%d&sort=album&session-id=%s", getRequestBase(), encodedArtist, encodedIndex, sessionId));
 
             notifyStatus();
          }
@@ -267,12 +282,88 @@ public class Session {
       ThreadExecutor.runTask(new Runnable() {
          public void run() {
             RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=clear&session-id=%s", getRequestBase(), sessionId));
-            RequestHelper.attemptRequest(String.format(
-                     "%s/ctrl-int/1/cue?command=play&query=('dmap.itemname:*%s*','daap.songartist:*%s*','daap.songalbum:*%s*')&type=music&sort=artist&index=%d&session-id=%s", getRequestBase(),
+            RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=play&query=('dmap.itemname:*%s*','daap.songartist:*%s*','daap.songalbum:*%s*')&type=music&sort=artist&index=%d&session-id=%s", getRequestBase(),
                      encodedSearch, encodedSearch, encodedSearch, index, sessionId));
             notifyStatus();
          }
       });
+   }
+   
+   public void controlPlayPlaylist(final String playlistPersistentId, final String containerItemId) {
+	   // /ctrl-int/1/playspec?database-spec='dmap.persistentid:0x9031099074C14E05'&container-spec='dmap.persistentid:0xA1E1854E0B9A1B'&container-item-spec='dmap.containeritemid:0x1b47'&session-id=7491138
+	   
+	  final String databasePersistentId = this.databasePersistentId;
+
+      ThreadExecutor.runTask(new Runnable() {
+         public void run() {
+            RequestHelper.attemptRequest(String.format(
+                     "%s/ctrl-int/1/playspec?database-spec='dmap.persistentid:0x%s'&container-spec='dmap.persistentid:0x%s'&container-item-spec='dmap.containeritemid:%s'&session-id=%s", getRequestBase(),
+                     databasePersistentId, playlistPersistentId, containerItemId, sessionId));
+            notifyStatus();
+         }
+      });
+   
+   }
+   
+
+   public void controlPlayIndex(final String albumid, final int tracknum) {
+	   //Attempt to play from current now playing list, otherwise try to play album
+      ThreadExecutor.runTask(new Runnable() {
+         public void run() {
+            
+            try {
+            	RequestHelper.request(String.format("%s/ctrl-int/1/cue?command=play&index=%d&sort=album&session-id=%s", getRequestBase(), tracknum, sessionId), false);
+            	//on iTunes this generates a 501 Not Implemented response
+        	} catch (Exception e) {
+        		if (albumid != "") //Fall back to choosing from the current album if there is one
+        		{
+                    RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=clear&session-id=%s", getRequestBase(), sessionId));
+        			RequestHelper.attemptRequest(String.format("%s/ctrl-int/1/cue?command=play&query='daap.songalbumid:%s'&index=%d&sort=album&session-id=%s", getRequestBase(), albumid, tracknum, sessionId));
+        		}
+    		}
+            notifyStatus();
+         }
+      });
+
+   }
+//
+//   public void controlQueuePlaylist(final String playlistPersistentId) {
+//	   
+//   
+//   }
+   
+   public class Playlist {
+	   protected long ID;
+	   protected String name, persistentId;
+	   protected long count;
+	   
+	   public Playlist(long ID, String name, long count, String persistentId)
+	   {
+		   this.ID = ID;
+		   this.name = name;
+		   this.count = count;
+		   this.persistentId = persistentId;
+	   }
+	   
+	   public long getID()
+	   {
+		   return this.ID;
+	   }
+	   
+	   public String getName()
+	   {
+		   return this.name;
+	   }
+	   
+	   public long getCount()
+	   {
+		   return this.count;
+	   }
+
+	   public String getPersistentId()
+	   {
+		   return this.persistentId;
+	   }
    }
 
 }

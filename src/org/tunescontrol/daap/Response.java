@@ -49,6 +49,9 @@ public class Response extends HashMap<String,Object> {
 		return getNumber(key).toString();
 	}
 	
+	public String getNumberHex(String key) throws Exception {
+		return Long.toHexString(getNumberLong(key));
+	}
 	
 	public List<Response> findArray(String prefix) throws Exception {
 		List<Response> found = new LinkedList<Response>();
