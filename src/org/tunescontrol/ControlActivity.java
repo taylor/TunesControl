@@ -455,21 +455,32 @@ public class ControlActivity extends Activity implements ViewFactory {
 
    @Override
    public boolean onKeyDown(int keyCode, KeyEvent event) {
-      super.onKeyDown(keyCode, event);
-
       // check for volume keys
       if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-         this.incrementVolume(+10);
+         this.incrementVolume(+5);
          return true;
       } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-         this.incrementVolume(-10);
+         this.incrementVolume(-5);
          return true;
       }
 
       // regardless of key, make sure we keep view alive
       this.fadeview.keepAwake();
 
-      return false;
+      return super.onKeyDown(keyCode, event);
+   }
+   
+   // get rid of volume rocker default sound effect
+   @Override
+   public boolean onKeyUp(int keycode, KeyEvent event) {
+       switch (keycode) {
+           case KeyEvent.KEYCODE_VOLUME_DOWN:
+           case KeyEvent.KEYCODE_VOLUME_UP:
+               break;
+           default:
+               return super.onKeyUp(keycode, event);
+       }
+       return true;
    }
 
    protected MenuItem repeat, shuffle;
